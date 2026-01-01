@@ -14,7 +14,7 @@ $csrfToken = $_SESSION['csrf_token'];
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>" />
-  <title>O2DO</title>
+  <title>Otodo</title>
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
 <body>
