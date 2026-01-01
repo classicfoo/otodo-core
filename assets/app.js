@@ -65,15 +65,21 @@ function filterTasks(task) {
 }
 
 function createRow(task) {
-  const row = document.createElement('tr');
+  const row = document.createElement('div');
+  row.className = 'task-row';
   row.dataset.id = task.id;
   row.innerHTML = `
-    <td class="task-title"></td>
-    <td class="priority"></td>
-    <td class="start"></td>
-    <td class="due"></td>
-    <td class="done"><input class="checkbox" type="checkbox" /></td>
-    <td class="actions"><button class="delete-btn" type="button">Delete</button></td>
+    <div class="task-main">
+      <div class="task-title"></div>
+      <div class="task-meta">
+        <div class="due"></div>
+        <div class="priority"></div>
+      </div>
+    </div>
+    <div class="task-actions">
+      <input class="star-toggle" type="checkbox" />
+      <button class="delete-btn" type="button" aria-label="Delete">✕</button>
+    </div>
   `;
   state.rows.set(task.id, row);
   return row;
@@ -88,7 +94,6 @@ function updateRow(task) {
   const priorityEl = row.querySelector('.priority');
   priorityEl.textContent = task.priority;
   priorityEl.className = `priority ${task.priority}`;
-  row.querySelector('.start').textContent = task.start_date || '';
   const due = dueStatus(task.due_date);
   const dueCell = row.querySelector('.due');
   if (due.label) {
@@ -96,7 +101,7 @@ function updateRow(task) {
   } else {
     dueCell.textContent = '';
   }
-  row.querySelector('.checkbox').checked = task.completed === 1;
+  row.querySelector('.star-toggle').checked = task.completed === 1;
   row.classList.toggle('completed', task.completed === 1);
   return row;
 }
@@ -269,7 +274,7 @@ async function init() {
   addForm.addEventListener('submit', handleAdd);
 
   taskBody.addEventListener('click', (event) => {
-    const row = event.target.closest('tr');
+    const row = event.target.closest('.task-row');
     if (!row) return;
     const id = row.dataset.id;
     if (event.target.classList.contains('delete-btn')) {
@@ -282,8 +287,8 @@ async function init() {
   });
 
   taskBody.addEventListener('change', (event) => {
-    if (!event.target.classList.contains('checkbox')) return;
-    const row = event.target.closest('tr');
+    if (!event.target.classList.contains('star-toggle')) return;
+    const row = event.target.closest('.task-row');
     const id = row?.dataset.id;
     if (id) {
       handleToggle(id, event.target.checked);

@@ -1,6 +1,6 @@
 :root {
   color-scheme: light;
-  --bg: #f6f7fb;
+  --bg: #f8f9fb;
   --card: #ffffff;
   --text: #1d232a;
   --muted: #6b7280;
@@ -23,9 +23,9 @@ body {
 }
 
 .app {
-  max-width: 980px;
-  margin: 32px auto 80px;
-  padding: 0 20px;
+  max-width: 520px;
+  margin: 20px auto 60px;
+  padding: 0 16px;
 }
 
 .topbar {
@@ -37,7 +37,34 @@ body {
 
 .topbar h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+  stroke: #1f2937;
+  stroke-width: 2;
+  fill: none;
 }
 
 .status {
@@ -69,7 +96,7 @@ body {
 
 .controls {
   background: var(--card);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 16px;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
   border: 1px solid var(--border);
@@ -77,18 +104,22 @@ body {
 
 #add-form {
   display: grid;
-  grid-template-columns: 1fr 120px 140px 140px 90px;
   gap: 12px;
-  align-items: end;
 }
 
 #add-form input,
 #add-form select,
 #add-form button {
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
   font-size: 14px;
+}
+
+#add-form .input-group {
+  display: grid;
+  grid-template-columns: 1fr 80px;
+  gap: 8px;
 }
 
 #add-form label {
@@ -104,6 +135,16 @@ body {
   border: none;
   cursor: pointer;
   font-weight: 600;
+}
+
+.field-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hidden-field {
+  display: none;
 }
 
 .tabs {
@@ -130,45 +171,61 @@ body {
 .list {
   margin-top: 18px;
   background: var(--card);
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 8px 0;
   border: 1px solid var(--border);
 }
 
-.list table {
-  width: 100%;
-  border-collapse: collapse;
+.task-list {
+  display: flex;
+  flex-direction: column;
 }
 
-.list th,
-.list td {
-  text-align: left;
-  padding: 12px 10px;
+.task-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
-  font-size: 14px;
+  align-items: center;
 }
 
-.list th {
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.list tr:last-child td {
+.task-row:last-child {
   border-bottom: none;
+}
+
+.task-main {
+  display: grid;
+  gap: 6px;
 }
 
 .task-title {
   cursor: pointer;
   font-weight: 600;
+  font-size: 15px;
+}
+
+.task-row.completed .task-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.task-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .priority {
-  text-transform: uppercase;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  text-transform: capitalize;
 }
 
 .priority.low {
@@ -220,9 +277,32 @@ body {
   box-shadow: 0 12px 18px rgba(15, 23, 42, 0.2);
 }
 
-.checkbox {
-  width: 18px;
-  height: 18px;
+.star-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: #fff;
+  appearance: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.star-toggle::before {
+  content: "☆";
+  font-size: 16px;
+  color: #9ca3af;
+}
+
+.star-toggle:checked {
+  border-color: #facc15;
+  background: #fef9c3;
+}
+
+.star-toggle:checked::before {
+  content: "★";
+  color: #eab308;
 }
 
 .delete-btn {
@@ -231,6 +311,12 @@ body {
   color: var(--danger);
   cursor: pointer;
   font-weight: 600;
+  opacity: 0.5;
+}
+
+.task-row:hover .delete-btn,
+.delete-btn:focus {
+  opacity: 1;
 }
 
 .inline-edit {
@@ -241,40 +327,16 @@ body {
   font-size: 14px;
 }
 
-@media (max-width: 880px) {
-  #add-form {
-    grid-template-columns: 1fr 120px 1fr 1fr 90px;
-  }
-}
-
-@media (max-width: 720px) {
-  #add-form {
-    grid-template-columns: 1fr;
+@media (max-width: 520px) {
+  .app {
+    padding: 0 12px;
   }
 
-  #add-form button {
-    width: 100%;
+  .topbar-actions {
+    gap: 8px;
   }
 
-  .list table,
-  .list thead {
-    display: block;
-  }
-
-  .list tr {
-    display: grid;
-    grid-template-columns: 1fr 100px;
-    gap: 6px 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .list td,
-  .list th {
-    border-bottom: none;
-  }
-
-  .list thead {
-    display: none;
+  #add-form .input-group {
+    grid-template-columns: 1fr 70px;
   }
 }
