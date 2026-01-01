@@ -4,7 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logout') {
-    handle_logout();
+    handle_logout($db);
     header('Location: login.php');
     exit;
 }
