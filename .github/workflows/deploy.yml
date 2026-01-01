@@ -33,6 +33,6 @@ jobs:
             --exclude-glob .github/** \
             --exclude-glob node_modules/** \
             --exclude-glob .env \
-            ./ .
+            ./ "$FTP_DIR"
           quit
           EOF
