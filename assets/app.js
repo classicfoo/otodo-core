@@ -12,13 +12,12 @@ const taskBody = document.getElementById('task-body');
 const emptyState = document.getElementById('empty-state');
 const addForm = document.getElementById('add-form');
 const titleInput = document.getElementById('title-input');
-const priorityInput = document.getElementById('priority-input');
-const startInput = document.getElementById('start-input');
-const dueInput = document.getElementById('due-input');
 const offlineIndicator = document.getElementById('offline-indicator');
 const syncIndicator = document.getElementById('sync-indicator');
 const toast = document.getElementById('toast');
 const tabs = document.querySelectorAll('.tab');
+const menuButton = document.getElementById('menu-button');
+const filterMenu = document.getElementById('filter-menu');
 
 const state = {
   tasks: new Map(),
@@ -68,11 +67,8 @@ function createRow(task) {
   const row = document.createElement('tr');
   row.dataset.id = task.id;
   row.innerHTML = `
-    <td class="task-title"></td>
-    <td class="priority"></td>
-    <td class="start"></td>
+    <td class="task-title"><a class="task-link"></a></td>
     <td class="due"></td>
-    <td class="done"><input class="checkbox" type="checkbox" /></td>
     <td class="actions"><button class="delete-btn" type="button">Delete</button></td>
   `;
   state.rows.set(task.id, row);
@@ -84,11 +80,9 @@ function updateRow(task) {
   if (!row) {
     row = createRow(task);
   }
-  row.querySelector('.task-title').textContent = task.title;
-  const priorityEl = row.querySelector('.priority');
-  priorityEl.textContent = task.priority;
-  priorityEl.className = `priority ${task.priority}`;
-  row.querySelector('.start').textContent = task.start_date || '';
+  const taskLink = row.querySelector('.task-link');
+  taskLink.textContent = task.title;
+  taskLink.href = `/task.php?id=${encodeURIComponent(task.id)}`;
   const due = dueStatus(task.due_date);
   const dueCell = row.querySelector('.due');
   if (due.label) {
@@ -96,7 +90,6 @@ function updateRow(task) {
   } else {
     dueCell.textContent = '';
   }
-  row.querySelector('.checkbox').checked = task.completed === 1;
   row.classList.toggle('completed', task.completed === 1);
   return row;
 }
@@ -149,9 +142,9 @@ async function handleAdd(event) {
   const task = {
     id: crypto.randomUUID(),
     title,
-    priority: priorityInput.value,
-    start_date: startInput.value || null,
-    due_date: dueInput.value || null,
+    priority: 'low',
+    start_date: null,
+    due_date: null,
     completed: 0,
     created_at: nowIso(),
     updated_at: nowIso(),
@@ -168,22 +161,6 @@ async function handleAdd(event) {
   triggerSync();
 }
 
-async function handleToggle(id, completed) {
-  const task = state.tasks.get(id);
-  if (!task) return;
-  const updated = { ...task, completed: completed ? 1 : 0, updated_at: nowIso() };
-  await saveTask(updated);
-  await addOutboxOp({
-    op_id: crypto.randomUUID(),
-    client_id: state.clientId,
-    type: 'toggle',
-    id,
-    completed: updated.completed,
-    updated_at: updated.updated_at,
-  });
-  triggerSync();
-}
-
 async function handleDelete(id) {
   await removeTask(id);
   await addOutboxOp({
@@ -193,43 +170,6 @@ async function handleDelete(id) {
     id,
   });
   triggerSync();
-}
-
-function editTitle(cell, task) {
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.value = task.title;
-  input.className = 'inline-edit';
-  cell.textContent = '';
-  cell.appendChild(input);
-  input.focus();
-  input.select();
-
-  const commit = async () => {
-    const newTitle = input.value.trim();
-    if (newTitle && newTitle !== task.title) {
-      const updated = { ...task, title: newTitle, updated_at: nowIso() };
-      await saveTask(updated);
-      await addOutboxOp({
-        op_id: crypto.randomUUID(),
-        client_id: state.clientId,
-        type: 'upsert',
-        task: updated,
-      });
-      triggerSync();
-    }
-    cell.textContent = state.tasks.get(task.id)?.title || task.title;
-  };
-
-  input.addEventListener('blur', commit, { once: true });
-  input.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      input.blur();
-    }
-    if (event.key === 'Escape') {
-      cell.textContent = task.title;
-    }
-  });
 }
 
 function triggerSync() {
@@ -275,19 +215,6 @@ async function init() {
     if (event.target.classList.contains('delete-btn')) {
       handleDelete(id);
     }
-    if (event.target.classList.contains('task-title')) {
-      const task = state.tasks.get(id);
-      if (task) editTitle(event.target, task);
-    }
-  });
-
-  taskBody.addEventListener('change', (event) => {
-    if (!event.target.classList.contains('checkbox')) return;
-    const row = event.target.closest('tr');
-    const id = row?.dataset.id;
-    if (id) {
-      handleToggle(id, event.target.checked);
-    }
   });
 
   tabs.forEach((tab) => {
@@ -296,7 +223,14 @@ async function init() {
       tab.classList.add('active');
       state.filter = tab.dataset.filter;
       refreshList();
+      filterMenu.classList.add('hidden');
+      menuButton.setAttribute('aria-expanded', 'false');
     });
+  });
+
+  menuButton.addEventListener('click', () => {
+    const isHidden = filterMenu.classList.toggle('hidden');
+    menuButton.setAttribute('aria-expanded', String(!isHidden));
   });
 
   window.addEventListener('online', updateOfflineIndicator);
