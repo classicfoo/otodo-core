@@ -28,111 +28,6 @@ body {
   padding: 0 20px;
 }
 
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 12px 16px;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
-}
-
-.navbar-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.brand {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--text);
-}
-
-.status {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.badge.offline {
-  background: #fee2e2;
-  color: var(--danger);
-}
-
-.badge.sync {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  position: relative;
-}
-
-.menu-button {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.menu-icon,
-.menu-icon::before,
-.menu-icon::after {
-  content: '';
-  display: block;
-  width: 20px;
-  height: 2px;
-  background: var(--text);
-  border-radius: 999px;
-  position: relative;
-}
-
-.menu-icon::before {
-  position: absolute;
-  top: -6px;
-  left: 0;
-}
-
-.menu-icon::after {
-  position: absolute;
-  top: 6px;
-  left: 0;
-}
-
-.menu-panel {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 12px;
-  min-width: 200px;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
-  z-index: 10;
-}
-
 .hidden {
   display: none !important;
 }
@@ -179,27 +74,6 @@ body {
   border: none;
   cursor: pointer;
   font-weight: 600;
-}
-
-.tabs {
-  display: flex;
-  gap: 8px;
-  flex-direction: column;
-}
-
-.tab {
-  border: 1px solid var(--border);
-  background: #fff;
-  padding: 6px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.tab.active {
-  background: var(--text);
-  color: #fff;
-  border-color: var(--text);
 }
 
 .list {
