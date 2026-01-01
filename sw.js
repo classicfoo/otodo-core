@@ -1,12 +1,14 @@
-const CACHE_NAME = 'otodo-shell-v1';
+const CACHE_NAME = 'otodo-shell-v2';
 const ASSETS = [
   '/',
   '/index.php',
+  '/task.php',
   '/assets/styles.css',
   '/assets/app.js',
   '/assets/db_local.js',
   '/assets/sync.js',
   '/assets/dates.js',
+  '/assets/task.js',
 ];
 
 self.addEventListener('install', (event) => {
@@ -46,7 +48,12 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
           return response;
         })
-        .catch(() => caches.match('/index.php'));
+        .catch(() => {
+          if (request.mode === 'navigate' && url.pathname.startsWith('/task.php')) {
+            return caches.match('/task.php');
+          }
+          return caches.match('/index.php');
+        });
     })
   );
 });
