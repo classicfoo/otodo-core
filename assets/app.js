@@ -3,7 +3,6 @@ import {
   putTask,
   deleteTask,
   addOutbox,
-  getOutbox,
 } from './db_local.js';
 import { dueStatus } from './dates.js';
 import { syncAll, ensureClientId } from './sync.js';
@@ -12,17 +11,11 @@ const taskBody = document.getElementById('task-body');
 const emptyState = document.getElementById('empty-state');
 const addForm = document.getElementById('add-form');
 const titleInput = document.getElementById('title-input');
-const offlineIndicator = document.getElementById('offline-indicator');
-const syncIndicator = document.getElementById('sync-indicator');
 const toast = document.getElementById('toast');
-const tabs = document.querySelectorAll('.tab');
-const menuButton = document.getElementById('menu-button');
-const filterMenu = document.getElementById('filter-menu');
 
 const state = {
   tasks: new Map(),
   rows: new Map(),
-  filter: 'all',
   clientId: null,
 };
 
@@ -57,12 +50,6 @@ function compareTasks(a, b) {
   return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
 }
 
-function filterTasks(task) {
-  if (state.filter === 'active') return task.completed === 0;
-  if (state.filter === 'completed') return task.completed === 1;
-  return true;
-}
-
 function createRow(task) {
   const row = document.createElement('tr');
   row.dataset.id = task.id;
@@ -95,7 +82,7 @@ function updateRow(task) {
 }
 
 function refreshList() {
-  const tasks = Array.from(state.tasks.values()).filter(filterTasks).sort(compareTasks);
+  const tasks = Array.from(state.tasks.values()).sort(compareTasks);
   const fragment = document.createDocumentFragment();
   tasks.forEach((task) => {
     const row = updateRow(task);
@@ -106,19 +93,8 @@ function refreshList() {
   emptyState.classList.toggle('hidden', tasks.length > 0);
 }
 
-async function updateSyncIndicator() {
-  const outbox = await getOutbox();
-  if (outbox.length) {
-    syncIndicator.textContent = `${outbox.length} pending`;
-    syncIndicator.classList.remove('hidden');
-  } else {
-    syncIndicator.classList.add('hidden');
-  }
-}
-
 async function addOutboxOp(op) {
   await addOutbox(op);
-  await updateSyncIndicator();
 }
 
 async function saveTask(task) {
@@ -179,7 +155,6 @@ function triggerSync() {
       state.tasks.clear();
       tasks.forEach((task) => state.tasks.set(task.id, task));
       refreshList();
-      updateSyncIndicator();
       showToast('Synced');
     })
     .catch((error) => {
@@ -188,20 +163,11 @@ function triggerSync() {
     });
 }
 
-function updateOfflineIndicator() {
-  offlineIndicator.classList.toggle('hidden', navigator.onLine);
-  if (navigator.onLine) {
-    triggerSync();
-  }
-}
-
 async function init() {
   state.clientId = await ensureClientId();
   const tasks = await getAllTasks();
   tasks.forEach((task) => state.tasks.set(task.id, task));
   refreshList();
-  updateSyncIndicator();
-  updateOfflineIndicator();
   if (navigator.onLine) {
     triggerSync();
   }
@@ -220,24 +186,7 @@ async function init() {
     window.location.href = `/task.php?id=${encodeURIComponent(id)}`;
   });
 
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => {
-      tabs.forEach((t) => t.classList.remove('active'));
-      tab.classList.add('active');
-      state.filter = tab.dataset.filter;
-      refreshList();
-      filterMenu.classList.add('hidden');
-      menuButton.setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  menuButton.addEventListener('click', () => {
-    const isHidden = filterMenu.classList.toggle('hidden');
-    menuButton.setAttribute('aria-expanded', String(!isHidden));
-  });
-
-  window.addEventListener('online', updateOfflineIndicator);
-  window.addEventListener('offline', updateOfflineIndicator);
+  window.addEventListener('online', triggerSync);
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
