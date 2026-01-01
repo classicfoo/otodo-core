@@ -14,25 +14,28 @@ $csrfToken = $_SESSION['csrf_token'];
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>" />
-  <title>O2DO</title>
+  <title>Otodo</title>
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
 <body>
   <div class="app">
     <header class="navbar">
       <div class="navbar-left">
-        <a class="brand" href="/index.php">O2DO</a>
+        <a class="brand" href="/index.php">Otodo</a>
         <div class="status">
           <span id="offline-indicator" class="badge offline hidden">Offline</span>
           <span id="sync-indicator" class="badge sync hidden">0 pending</span>
         </div>
       </div>
-      <div class="navbar-actions">
-        <a class="back-link" href="/index.php">Back</a>
-      </div>
     </header>
 
     <section class="controls editor">
+      <details class="editor-menu">
+        <summary class="menu-trigger" aria-label="Task options">…</summary>
+        <div class="menu-panel">
+          <button id="delete-task" type="button" class="menu-delete">Delete</button>
+        </div>
+      </details>
       <form id="edit-form" class="edit-form" autocomplete="off">
         <label>
           Title
@@ -46,9 +49,6 @@ $csrfToken = $_SESSION['csrf_token'];
           <input id="edit-completed" name="completed" type="checkbox" />
           Completed
         </label>
-        <div class="button-row">
-          <button id="delete-task" type="button" class="danger">Delete</button>
-        </div>
       </form>
       <p id="missing-task" class="empty hidden">Task not found.</p>
     </section>
