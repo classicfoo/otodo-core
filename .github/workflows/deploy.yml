@@ -29,7 +29,7 @@ jobs:
           set net:max-retries 2
           set net:reconnect-interval-base 5
           mirror -R --verbose --delete \
-            --no-perms
+            --no-perms \
             --exclude .git/ \
             --exclude .github/ \
             --exclude node_modules/ \
