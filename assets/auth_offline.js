@@ -218,10 +218,6 @@ async function enforceAppSession() {
     return { allowed: false, session: null, isOnline: false };
   }
   const isOnline = await checkOnline();
-  if (isOnline) {
-    window.location.href = '/login.php';
-    return { allowed: false, session, isOnline };
-  }
   return { allowed: true, session, isOnline };
 }
 
