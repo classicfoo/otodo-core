@@ -24,6 +24,7 @@ $csrfToken = $_SESSION['csrf_token'];
         <input id="title-input" name="title" type="text" placeholder="New task" required />
         <button type="submit">Add</button>
       </form>
+      <button id="clear-cache-btn" type="button">Clear cache</button>
     </section>
 
     <section class="list">
