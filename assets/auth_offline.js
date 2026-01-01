@@ -3,6 +3,7 @@ import { getMeta, setMeta } from './db_local.js';
 const OFFLINE_AUTH_KEY = 'offline_auth';
 const OFFLINE_SESSION_KEY = 'offline_session';
 const PENDING_PASSWORD_KEY = 'otodo_pending_password';
+const REHYDRATE_ATTEMPT_KEY = 'otodo_rehydrate_attempted';
 
 function bufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -143,6 +144,27 @@ function clearPendingPassword() {
   sessionStorage.removeItem(PENDING_PASSWORD_KEY);
 }
 
+async function attemptServerRehydrate() {
+  if (!navigator.onLine) {
+    return false;
+  }
+  if (sessionStorage.getItem(REHYDRATE_ATTEMPT_KEY)) {
+    return false;
+  }
+  sessionStorage.setItem(REHYDRATE_ATTEMPT_KEY, '1');
+  try {
+    await fetch(window.location.pathname, {
+      method: 'GET',
+      cache: 'no-store',
+      credentials: 'include',
+    });
+    window.location.reload();
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 async function handleLoginPayload() {
   const payload = window.OTODO_LOGIN_PAYLOAD;
   if (!payload) {
@@ -152,6 +174,7 @@ async function handleLoginPayload() {
   const pendingPassword = sessionStorage.getItem(PENDING_PASSWORD_KEY);
   await storeOfflineAuth(payload, pendingPassword);
   clearPendingPassword();
+  sessionStorage.removeItem(REHYDRATE_ATTEMPT_KEY);
   window.location.href = '/index.php';
 }
 
@@ -212,6 +235,7 @@ async function enforceAppSession() {
   if (window.OTODO_SERVER_AUTH) {
     return { allowed: true, session: null, isOnline: true };
   }
+  await attemptServerRehydrate();
   const session = await getOfflineSession();
   if (!session) {
     window.location.href = '/login.php';
