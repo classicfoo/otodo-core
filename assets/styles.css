@@ -38,6 +38,10 @@ body {
   padding: 16px;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
   border: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
 }
 
 #add-form,
@@ -46,6 +50,10 @@ body {
   grid-template-columns: 1fr 120px;
   gap: 12px;
   align-items: end;
+}
+
+#add-form {
+  flex: 1 1 320px;
 }
 
 #add-form input,
@@ -74,6 +82,21 @@ body {
   border: none;
   cursor: pointer;
   font-weight: 600;
+}
+
+#clear-cache-btn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#clear-cache-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .list {
@@ -209,6 +232,10 @@ body {
   }
 
   #add-form button {
+    width: 100%;
+  }
+
+  #clear-cache-btn {
     width: 100%;
   }
 

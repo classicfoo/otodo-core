@@ -12,6 +12,7 @@ const emptyState = document.getElementById('empty-state');
 const addForm = document.getElementById('add-form');
 const titleInput = document.getElementById('title-input');
 const toast = document.getElementById('toast');
+const clearCacheBtn = document.getElementById('clear-cache-btn');
 
 const state = {
   tasks: new Map(),
@@ -173,6 +174,30 @@ async function init() {
   }
 
   addForm.addEventListener('submit', handleAdd);
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener('click', async () => {
+      const originalLabel = clearCacheBtn.textContent;
+      clearCacheBtn.disabled = true;
+      clearCacheBtn.textContent = 'Clearing...';
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+        }
+        if ('caches' in window) {
+          const cacheKeys = await caches.keys();
+          await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+        }
+        showToast('Cache cleared');
+        setTimeout(() => window.location.reload(), 200);
+      } catch (error) {
+        console.error(error);
+        showToast('Cache clear failed');
+        clearCacheBtn.disabled = false;
+        clearCacheBtn.textContent = originalLabel;
+      }
+    });
+  }
 
   taskBody.addEventListener('click', (event) => {
     const row = event.target.closest('tr');
