@@ -11,8 +11,14 @@ if ($action === 'login') {
     $password = $_POST['password'] ?? '';
     [$errors, $successMessage] = handle_login($db, $email, $password);
     if (!$errors) {
-        header('Location: index.php');
-        exit;
+        $currentUser = current_user();
+        $offlineLoginPayload = [
+            'user' => [
+                'id' => $currentUser['id'],
+                'email' => $currentUser['email'],
+            ],
+            'issued_at' => gmdate('c'),
+        ];
     }
 } elseif ($action === 'logout') {
     $successMessage = handle_logout();
@@ -50,7 +56,7 @@ include __DIR__ . '/auth_header.php';
     <p class="hint mb-3">Continue to your tasks or sign out to switch accounts.</p>
     <div class="d-flex flex-wrap gap-2">
       <a class="btn btn-neutral" href="index.php">Go to app</a>
-      <form method="post">
+      <form method="post" data-offline-logout="true">
         <input type="hidden" name="action" value="logout">
         <button type="submit" class="btn btn-outline-dark">Log out</button>
       </form>
@@ -62,7 +68,8 @@ include __DIR__ . '/auth_header.php';
   <section class="surface">
     <h2 class="h5">Log in</h2>
     <p class="hint">Enter your email and password.</p>
-    <form method="post" class="d-grid gap-3">
+    <div id="offline-login-error" class="alert alert-danger hidden" role="alert"></div>
+    <form method="post" class="d-grid gap-3" id="login-form">
       <input type="hidden" name="action" value="login">
       <div>
         <label class="form-label" for="login-email">Email</label>
@@ -79,6 +86,16 @@ include __DIR__ . '/auth_header.php';
   </section>
 <?php endif; ?>
 
+<?php
+if (!empty($offlineLoginPayload ?? null)) {
+    $payloadJson = json_encode($offlineLoginPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+    echo "<script>window.OTODO_LOGIN_PAYLOAD = {$payloadJson};</script>";
+}
+?>
+<script>
+  window.OTODO_AUTH_GATE = 'login';
+</script>
+<script type="module" src="/assets/auth_offline.js"></script>
 <?php
 include __DIR__ . '/auth_footer.php';
 ?>

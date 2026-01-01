@@ -10,10 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logou
 }
 
 $currentUser = current_user();
-if (!$currentUser) {
-    header('Location: login.php');
-    exit;
-}
+$serverAuth = (bool)$currentUser;
 
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -66,8 +63,11 @@ $csrfToken = $_SESSION['csrf_token'];
 
   <script>
     window.OTODO_CSRF = "<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>";
+    window.OTODO_SERVER_AUTH = <?php echo $serverAuth ? 'true' : 'false'; ?>;
+    window.OTODO_AUTH_GATE = 'app';
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="/assets/auth_offline.js"></script>
   <script type="module" src="/assets/task.js"></script>
 </body>
 </html>
