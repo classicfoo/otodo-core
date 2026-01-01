@@ -214,7 +214,10 @@ async function init() {
     const id = row.dataset.id;
     if (event.target.classList.contains('delete-btn')) {
       handleDelete(id);
+      return;
     }
+    if (event.target.closest('a')) return;
+    window.location.href = `/task.php?id=${encodeURIComponent(id)}`;
   });
 
   tabs.forEach((tab) => {
