@@ -33,7 +33,6 @@ $csrfToken = $_SESSION['csrf_token'];
           <tr>
             <th>Title</th>
             <th>Due</th>
-            <th></th>
           </tr>
         </thead>
         <tbody id="task-body"></tbody>
