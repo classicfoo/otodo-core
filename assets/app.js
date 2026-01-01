@@ -1,9 +1,4 @@
-import {
-  getAllTasks,
-  putTask,
-  deleteTask,
-  addOutbox,
-} from './db_local.js';
+import { getAllTasks, putTask, addOutbox } from './db_local.js';
 import { dueStatus } from './dates.js';
 import { syncAll, ensureClientId } from './sync.js';
 
@@ -57,7 +52,6 @@ function createRow(task) {
   row.innerHTML = `
     <td class="task-title"><a class="task-link"></a></td>
     <td class="due"></td>
-    <td class="actions"><button class="delete-btn" type="button">Delete</button></td>
   `;
   state.rows.set(task.id, row);
   return row;
@@ -104,14 +98,6 @@ async function saveTask(task) {
   refreshList();
 }
 
-async function removeTask(id) {
-  state.tasks.delete(id);
-  await deleteTask(id);
-  const row = state.rows.get(id);
-  if (row) row.remove();
-  refreshList();
-}
-
 async function handleAdd(event) {
   event.preventDefault();
   const title = titleInput.value.trim();
@@ -135,17 +121,6 @@ async function handleAdd(event) {
   });
   addForm.reset();
   titleInput.focus();
-  triggerSync();
-}
-
-async function handleDelete(id) {
-  await removeTask(id);
-  await addOutboxOp({
-    op_id: crypto.randomUUID(),
-    client_id: state.clientId,
-    type: 'delete',
-    id,
-  });
   triggerSync();
 }
 
@@ -203,10 +178,6 @@ async function init() {
     const row = event.target.closest('tr');
     if (!row) return;
     const id = row.dataset.id;
-    if (event.target.classList.contains('delete-btn')) {
-      handleDelete(id);
-      return;
-    }
     if (event.target.closest('a')) return;
     window.location.href = `/task.php?id=${encodeURIComponent(id)}`;
   });
