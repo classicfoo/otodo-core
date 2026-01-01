@@ -1,7 +1,16 @@
 <?php
 declare(strict_types=1);
 
-session_start();
+require __DIR__ . '/auth.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logout') {
+    handle_logout($db);
+    header('Location: login.php');
+    exit;
+}
+
+$currentUser = current_user();
+$serverAuth = (bool)$currentUser;
 
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -14,25 +23,24 @@ $csrfToken = $_SESSION['csrf_token'];
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>" />
-  <title>O2DO</title>
+  <title>Otodo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
 <body>
+  <?php
+  $includeAllTasksLink = true;
+  include __DIR__ . '/app_nav.php';
+  ?>
   <div class="app">
-    <header class="navbar">
-      <div class="navbar-left">
-        <a class="brand" href="/index.php">O2DO</a>
-        <div class="status">
-          <span id="offline-indicator" class="badge offline hidden">Offline</span>
-          <span id="sync-indicator" class="badge sync hidden">0 pending</span>
-        </div>
-      </div>
-      <div class="navbar-actions">
-        <a class="back-link" href="/index.php">Back</a>
-      </div>
-    </header>
 
     <section class="controls editor">
+      <details class="editor-menu">
+        <summary class="menu-trigger" aria-label="Task options">…</summary>
+        <div class="menu-panel">
+          <button id="delete-task" type="button" class="menu-delete">Delete</button>
+        </div>
+      </details>
       <form id="edit-form" class="edit-form" autocomplete="off">
         <label>
           Title
@@ -46,10 +54,6 @@ $csrfToken = $_SESSION['csrf_token'];
           <input id="edit-completed" name="completed" type="checkbox" />
           Completed
         </label>
-        <div class="button-row">
-          <button type="submit">Save</button>
-          <button id="delete-task" type="button" class="danger">Delete</button>
-        </div>
       </form>
       <p id="missing-task" class="empty hidden">Task not found.</p>
     </section>
@@ -59,7 +63,11 @@ $csrfToken = $_SESSION['csrf_token'];
 
   <script>
     window.OTODO_CSRF = "<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>";
+    window.OTODO_SERVER_AUTH = <?php echo $serverAuth ? 'true' : 'false'; ?>;
+    window.OTODO_AUTH_GATE = 'app';
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="/assets/auth_offline.js"></script>
   <script type="module" src="/assets/task.js"></script>
 </body>
 </html>

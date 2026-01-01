@@ -16,7 +16,7 @@ if ($action === 'register') {
     $password = $_POST['password'] ?? '';
     [$errors, $successMessage] = handle_register($db, $email, $firstName, $lastName, $password);
 } elseif ($action === 'logout') {
-    $successMessage = handle_logout();
+    $successMessage = handle_logout($db);
 }
 
 $currentUser = current_user();
@@ -49,12 +49,12 @@ include __DIR__ . '/auth_header.php';
     <h2 class="h5">You are signed in</h2>
     <p class="mb-1"><strong>Email:</strong> <?php echo htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8'); ?></p>
     <p class="hint mb-3">You can log out to register a different account.</p>
-    <form method="post">
+    <form method="post" data-offline-logout="true">
       <input type="hidden" name="action" value="logout">
       <button type="submit" class="btn btn-outline-dark">Log out</button>
     </form>
     <div class="divider"></div>
-    <p class="hint mb-0">Already have an account? <a href="index.php">Return to login</a>.</p>
+    <p class="hint mb-0">Already have an account? <a href="login.php">Return to login</a>.</p>
   </section>
 <?php else: ?>
   <section class="surface">
@@ -81,10 +81,14 @@ include __DIR__ . '/auth_header.php';
       <button type="submit" class="btn btn-neutral">Create account</button>
     </form>
     <div class="divider"></div>
-    <p class="hint mb-0">Already have an account? <a href="index.php">Log in here</a>.</p>
+    <p class="hint mb-0">Already have an account? <a href="login.php">Log in here</a>.</p>
   </section>
 <?php endif; ?>
 
+<script>
+  window.OTODO_AUTH_GATE = 'login';
+</script>
+<script type="module" src="/assets/auth_offline.js"></script>
 <?php
 include __DIR__ . '/auth_footer.php';
 ?>

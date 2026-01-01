@@ -28,6 +28,124 @@ body {
   padding: 0 20px;
 }
 
+.app-nav {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-row {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-brand {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+
+.badge.offline {
+  background: #fee2e2;
+  color: var(--danger);
+}
+
+.badge.sync {
+  background: #dbeafe;
+  color: var(--primary);
+}
+
+.offline-banner {
+  max-width: 980px;
+  margin: 12px auto 0;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid #fecaca;
+  text-align: center;
+}
+
+.menu-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.menu-greeting {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.menu-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.menu-item,
+.menu-action button {
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.95rem;
+  text-decoration: none;
+  display: block;
+}
+
+.menu-item:last-child,
+.menu-action:last-child button {
+  border-bottom: 0;
+}
+
+.menu-action {
+  margin: 0;
+}
+
+.menu-footer {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: auto 0 0;
+}
+
 .hidden {
   display: none !important;
 }
@@ -42,6 +160,61 @@ body {
   flex-wrap: wrap;
   gap: 12px;
   align-items: flex-end;
+}
+
+.controls.editor {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+  position: relative;
+}
+
+.editor-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+}
+
+.editor-menu[open] {
+  background: #fef9c3;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+}
+
+.menu-trigger {
+  list-style: none;
+  cursor: pointer;
+  border: none;
+  background: #e5e7eb;
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.menu-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.menu-panel {
+  margin-top: 8px;
+}
+
+.menu-delete {
+  border: 1px solid var(--danger);
+  background: transparent;
+  color: var(--danger);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 #add-form,

@@ -45,6 +45,9 @@ $currentUser = $currentUser ?? null;
         padding: 0 24px 64px;
         background: transparent;
       }
+      .app-shell header {
+        background: transparent;
+      }
       .brand-mark {
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -133,6 +136,9 @@ $currentUser = $currentUser ?? null;
         color: #9ca3af;
         margin: auto 0 0;
       }
+      .hidden {
+        display: none !important;
+      }
       @media (max-width: 576px) {
         .app-shell {
           margin: 24px auto;
@@ -158,7 +164,7 @@ $currentUser = $currentUser ?? null;
   <body>
     <nav class="app-nav">
       <div class="container-fluid px-4 py-3 d-flex align-items-center justify-content-between">
-        <span class="app-brand">commit</span>
+        <span class="app-brand">Otodo</span>
         <button class="btn btn-outline-dark btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainMenu" aria-controls="mainMenu">
           <span class="visually-hidden">Open menu</span>
           ☰
@@ -181,7 +187,7 @@ $currentUser = $currentUser ?? null;
           </p>
           <div class="menu-card">
             <?php if ($currentUser): ?>
-              <form method="post" class="menu-action">
+              <form method="post" class="menu-action" data-offline-logout="true">
                 <input type="hidden" name="action" value="logout">
                 <button type="submit">Logout</button>
               </form>
@@ -196,7 +202,7 @@ $currentUser = $currentUser ?? null;
     <div class="app-shell">
       <?php if ($showPageHeader): ?>
         <header class="d-flex flex-column gap-2 mb-4">
-          <span class="brand-mark">commit</span>
+          <span class="brand-mark">Otodo</span>
           <h1 class="h3 mb-0"><?php echo htmlspecialchars($pageHeading, ENT_QUOTES, 'UTF-8'); ?></h1>
           <?php if ($pageHint !== ''): ?>
             <p class="hint"><?php echo htmlspecialchars($pageHint, ENT_QUOTES, 'UTF-8'); ?></p>
