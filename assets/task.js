@@ -5,6 +5,10 @@ const form = document.getElementById('edit-form');
 const titleInput = document.getElementById('edit-title');
 const dueInput = document.getElementById('edit-due');
 const completedInput = document.getElementById('edit-completed');
+const priorityInput = document.getElementById('edit-priority');
+const starInput = document.getElementById('edit-star');
+const descriptionInput = document.getElementById('edit-description');
+const hashtagsInput = document.getElementById('edit-hashtags');
 const deleteButton = document.getElementById('delete-task');
 const missingTask = document.getElementById('missing-task');
 const offlineIndicator = document.getElementById('offline-indicator');
@@ -13,6 +17,8 @@ const toast = document.getElementById('toast');
 
 let task = null;
 let clientId = null;
+let ready = false;
+let autosaveTimeout = null;
 
 function showToast(message) {
   toast.textContent = message;
@@ -65,6 +71,18 @@ function populateForm(loadedTask) {
   titleInput.value = loadedTask.title;
   dueInput.value = loadedTask.due_date || '';
   completedInput.checked = loadedTask.completed === 1;
+  if (priorityInput) {
+    priorityInput.value = loadedTask.priority || 'low';
+  }
+  if (starInput) {
+    starInput.checked = loadedTask.star === 1;
+  }
+  if (descriptionInput) {
+    descriptionInput.value = loadedTask.description || '';
+  }
+  if (hashtagsInput) {
+    hashtagsInput.value = loadedTask.hashtags || '';
+  }
 }
 
 async function loadTask(id) {
@@ -73,11 +91,24 @@ async function loadTask(id) {
     showMissingTask();
     return;
   }
+  ready = false;
   populateForm(task);
+  ready = true;
 }
 
-async function handleSave(event) {
-  event.preventDefault();
+function hasTaskChanges(updated) {
+  if (!task) return false;
+  if (updated.title !== task.title) return true;
+  if ((updated.due_date || null) !== (task.due_date || null)) return true;
+  if (updated.completed !== task.completed) return true;
+  if (priorityInput && updated.priority !== task.priority) return true;
+  if (starInput && updated.star !== task.star) return true;
+  if (descriptionInput && updated.description !== task.description) return true;
+  if (hashtagsInput && updated.hashtags !== task.hashtags) return true;
+  return false;
+}
+
+function buildUpdatedTask() {
   if (!task) return;
   const title = titleInput.value.trim();
   if (!title) return;
@@ -88,6 +119,25 @@ async function handleSave(event) {
     completed: completedInput.checked ? 1 : 0,
     updated_at: nowIso(),
   };
+  if (priorityInput) {
+    updated.priority = priorityInput.value || task.priority || 'low';
+  }
+  if (starInput) {
+    updated.star = starInput.checked ? 1 : 0;
+  }
+  if (descriptionInput) {
+    updated.description = descriptionInput.value || '';
+  }
+  if (hashtagsInput) {
+    updated.hashtags = hashtagsInput.value || '';
+  }
+  return updated;
+}
+
+async function performAutosave() {
+  if (!task) return;
+  const updated = buildUpdatedTask();
+  if (!updated || !hasTaskChanges(updated)) return;
   await putTask(updated);
   await addOutboxOp({
     op_id: crypto.randomUUID(),
@@ -98,6 +148,34 @@ async function handleSave(event) {
   task = updated;
   showToast('Saved');
   triggerSync();
+}
+
+function scheduleAutosave() {
+  if (!ready) return;
+  if (autosaveTimeout) {
+    clearTimeout(autosaveTimeout);
+  }
+  autosaveTimeout = setTimeout(() => {
+    performAutosave().catch((error) => {
+      console.error(error);
+      showToast('Save failed');
+    });
+  }, 400);
+}
+
+function registerAutosaveInput(input) {
+  if (!input) return;
+  ['input', 'change'].forEach((eventName) => {
+    input.addEventListener(eventName, scheduleAutosave);
+  });
+}
+
+function registerAutosaveInputs() {
+  const fields = form.querySelectorAll('input, select, textarea');
+  fields.forEach((field) => {
+    if (field.type === 'submit' || field.type === 'button') return;
+    registerAutosaveInput(field);
+  });
 }
 
 async function handleDelete() {
@@ -125,8 +203,10 @@ async function init() {
   await updateSyncIndicator();
   updateOfflineIndicator();
 
-  form.addEventListener('submit', handleSave);
+  form.addEventListener('submit', (event) => event.preventDefault());
   deleteButton.addEventListener('click', handleDelete);
+
+  registerAutosaveInputs();
 
   window.addEventListener('online', updateOfflineIndicator);
   window.addEventListener('offline', updateOfflineIndicator);
