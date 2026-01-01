@@ -47,7 +47,6 @@ $csrfToken = $_SESSION['csrf_token'];
           Completed
         </label>
         <div class="button-row">
-          <button type="submit">Save</button>
           <button id="delete-task" type="button" class="danger">Delete</button>
         </div>
       </form>
