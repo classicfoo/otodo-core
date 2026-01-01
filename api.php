@@ -81,6 +81,10 @@ function ensure_db(): SQLite3 {
     return $db;
 }
 
+if (!isset($_SESSION['user'])) {
+    respond_error('Unauthorized', 'unauthorized', 401);
+}
+
 $action = $_GET['action'] ?? '';
 if ($action === '' && isset($_POST['action'])) {
     $action = (string)$_POST['action'];

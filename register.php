@@ -54,7 +54,7 @@ include __DIR__ . '/auth_header.php';
       <button type="submit" class="btn btn-outline-dark">Log out</button>
     </form>
     <div class="divider"></div>
-    <p class="hint mb-0">Already have an account? <a href="index.php">Return to login</a>.</p>
+    <p class="hint mb-0">Already have an account? <a href="login.php">Return to login</a>.</p>
   </section>
 <?php else: ?>
   <section class="surface">
@@ -81,7 +81,7 @@ include __DIR__ . '/auth_header.php';
       <button type="submit" class="btn btn-neutral">Create account</button>
     </form>
     <div class="divider"></div>
-    <p class="hint mb-0">Already have an account? <a href="index.php">Log in here</a>.</p>
+    <p class="hint mb-0">Already have an account? <a href="login.php">Log in here</a>.</p>
   </section>
 <?php endif; ?>
 
