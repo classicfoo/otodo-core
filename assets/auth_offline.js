@@ -105,6 +105,26 @@ async function clearOfflineSession() {
   await setMeta(OFFLINE_SESSION_KEY, null);
 }
 
+async function checkOnline() {
+  if (!navigator.onLine) {
+    return false;
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1500);
+  try {
+    await fetch('/api.php?action=ping', {
+      method: 'GET',
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    return true;
+  } catch (error) {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function showOfflineError(message) {
   const alert = document.getElementById('offline-login-error');
   if (!alert) return;
@@ -168,9 +188,10 @@ function attachLogoutHandlers() {
   });
 }
 
-async function applyOfflineUi(session) {
+async function applyOfflineUi(session, isOnline) {
   if (!session) return;
-  if (navigator.onLine && session.mode !== 'offline') {
+  const online = isOnline ?? navigator.onLine;
+  if (online && session.mode !== 'offline') {
     return;
   }
   const banner = document.getElementById('offline-banner');
@@ -189,18 +210,15 @@ async function applyOfflineUi(session) {
 
 async function enforceAppSession() {
   if (window.OTODO_SERVER_AUTH) {
-    return;
+    return { allowed: true, session: null, isOnline: true };
   }
   const session = await getOfflineSession();
-  if (session && !navigator.onLine) {
-    await applyOfflineUi(session);
-    return;
-  }
-  if (session && navigator.onLine) {
+  if (!session) {
     window.location.href = '/login.php';
-    return;
+    return { allowed: false, session: null, isOnline: false };
   }
-  window.location.href = '/login.php';
+  const isOnline = await checkOnline();
+  return { allowed: true, session, isOnline };
 }
 
 async function initAuth() {
@@ -213,9 +231,12 @@ async function initAuth() {
   }
   if (gate === 'app') {
     attachLogoutHandlers();
-    await enforceAppSession();
-    const session = await getOfflineSession();
-    await applyOfflineUi(session);
+    const result = await enforceAppSession();
+    if (!result?.allowed) {
+      return;
+    }
+    const session = result.session ?? await getOfflineSession();
+    await applyOfflineUi(session, result.isOnline);
   }
 }
 
