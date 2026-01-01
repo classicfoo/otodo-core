@@ -14,42 +14,38 @@ $csrfToken = $_SESSION['csrf_token'];
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>" />
-  <title>Otodo</title>
+  <title>O2DO</title>
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
 <body>
   <div class="app">
-    <header class="topbar">
-      <h1>Otodo</h1>
-      <div class="status">
-        <span id="offline-indicator" class="badge offline hidden">Offline</span>
-        <span id="sync-indicator" class="badge sync hidden">0 pending</span>
+    <header class="navbar">
+      <div class="navbar-left">
+        <a class="brand" href="/index.php">O2DO</a>
+        <div class="status">
+          <span id="offline-indicator" class="badge offline hidden">Offline</span>
+          <span id="sync-indicator" class="badge sync hidden">0 pending</span>
+        </div>
+      </div>
+      <div class="navbar-actions">
+        <button id="menu-button" class="menu-button" type="button" aria-expanded="false" aria-controls="filter-menu">
+          <span class="menu-icon"></span>
+        </button>
+        <div id="filter-menu" class="menu-panel hidden">
+          <div class="tabs" role="tablist">
+            <button type="button" class="tab active" data-filter="all">All</button>
+            <button type="button" class="tab" data-filter="active">Active</button>
+            <button type="button" class="tab" data-filter="completed">Completed</button>
+          </div>
+        </div>
       </div>
     </header>
 
     <section class="controls">
       <form id="add-form" autocomplete="off">
         <input id="title-input" name="title" type="text" placeholder="New task" required />
-        <select id="priority-input" name="priority">
-          <option value="low">Low</option>
-          <option value="med">Med</option>
-          <option value="high">High</option>
-        </select>
-        <label>
-          Start
-          <input id="start-input" name="start" type="date" />
-        </label>
-        <label>
-          Due
-          <input id="due-input" name="due" type="date" />
-        </label>
         <button type="submit">Add</button>
       </form>
-      <div class="tabs" role="tablist">
-        <button type="button" class="tab active" data-filter="all">All</button>
-        <button type="button" class="tab" data-filter="active">Active</button>
-        <button type="button" class="tab" data-filter="completed">Completed</button>
-      </div>
     </section>
 
     <section class="list">
@@ -57,10 +53,7 @@ $csrfToken = $_SESSION['csrf_token'];
         <thead>
           <tr>
             <th>Title</th>
-            <th>Priority</th>
-            <th>Start</th>
             <th>Due</th>
-            <th>Done</th>
             <th></th>
           </tr>
         </thead>

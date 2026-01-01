@@ -42,6 +42,16 @@ export async function getAllTasks() {
   });
 }
 
+export async function getTask(id) {
+  return withStore('tasks', 'readonly', (store) => {
+    return new Promise((resolve, reject) => {
+      const request = store.get(id);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  });
+}
+
 export async function putTask(task) {
   return withStore('tasks', 'readwrite', (store) => store.put(task));
 }
