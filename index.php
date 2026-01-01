@@ -18,7 +18,6 @@ $csrfToken = $_SESSION['csrf_token'];
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
 <body>
-TESTING 123
   <div class="app">
     <header class="topbar">
       <h1>Otodo</h1>
