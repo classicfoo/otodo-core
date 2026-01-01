@@ -49,7 +49,7 @@ include __DIR__ . '/auth_header.php';
     <h2 class="h5">You are signed in</h2>
     <p class="mb-1"><strong>Email:</strong> <?php echo htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8'); ?></p>
     <p class="hint mb-3">You can log out to register a different account.</p>
-    <form method="post">
+    <form method="post" data-offline-logout="true">
       <input type="hidden" name="action" value="logout">
       <button type="submit" class="btn btn-outline-dark">Log out</button>
     </form>
@@ -85,6 +85,10 @@ include __DIR__ . '/auth_header.php';
   </section>
 <?php endif; ?>
 
+<script>
+  window.OTODO_AUTH_GATE = 'login';
+</script>
+<script type="module" src="/assets/auth_offline.js"></script>
 <?php
 include __DIR__ . '/auth_footer.php';
 ?>
