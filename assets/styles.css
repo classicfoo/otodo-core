@@ -28,41 +28,6 @@ body {
   padding: 0 20px;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.topbar h1 {
-  margin: 0;
-  font-size: 28px;
-}
-
-.status {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.badge.offline {
-  background: #fee2e2;
-  color: var(--danger);
-}
-
-.badge.sync {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
 .hidden {
   display: none !important;
 }
@@ -73,32 +38,45 @@ body {
   padding: 16px;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
   border: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
 }
 
-#add-form {
+#add-form,
+.edit-form {
   display: grid;
-  grid-template-columns: 1fr 120px 140px 140px 90px;
+  grid-template-columns: 1fr 120px;
   gap: 12px;
   align-items: end;
 }
 
+#add-form {
+  flex: 1 1 320px;
+}
+
 #add-form input,
 #add-form select,
-#add-form button {
+#add-form button,
+.edit-form input,
+.edit-form button {
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
   font-size: 14px;
 }
 
-#add-form label {
+#add-form label,
+.edit-form label {
   display: grid;
   gap: 6px;
   font-size: 12px;
   color: var(--muted);
 }
 
-#add-form button {
+#add-form button,
+.edit-form button {
   background: var(--primary);
   color: #fff;
   border: none;
@@ -106,25 +84,19 @@ body {
   font-weight: 600;
 }
 
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.tab {
+#clear-cache-btn {
+  padding: 10px 12px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: #fff;
-  padding: 6px 14px;
-  border-radius: 999px;
+  color: var(--text);
   cursor: pointer;
-  font-size: 13px;
+  font-weight: 600;
 }
 
-.tab.active {
-  background: var(--text);
-  color: #fff;
-  border-color: var(--text);
+#clear-cache-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .list {
@@ -160,27 +132,16 @@ body {
 }
 
 .task-title {
-  cursor: pointer;
   font-weight: 600;
 }
 
-.priority {
-  text-transform: uppercase;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.task-link {
+  color: var(--text);
+  text-decoration: none;
 }
 
-.priority.low {
-  color: var(--success);
-}
-
-.priority.med {
-  color: var(--warning);
-}
-
-.priority.high {
-  color: var(--danger);
+.task-link:hover {
+  text-decoration: underline;
 }
 
 .due-label {
@@ -220,11 +181,6 @@ body {
   box-shadow: 0 12px 18px rgba(15, 23, 42, 0.2);
 }
 
-.checkbox {
-  width: 18px;
-  height: 18px;
-}
-
 .delete-btn {
   border: none;
   background: transparent;
@@ -233,17 +189,40 @@ body {
   font-weight: 600;
 }
 
-.inline-edit {
-  width: 100%;
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+.editor .button-row {
+  display: flex;
+  gap: 12px;
+}
+
+.editor .edit-form {
+  grid-template-columns: 1fr;
+}
+
+.editor .button-row .danger {
+  background: var(--danger);
+}
+
+.checkbox-field {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
+  color: var(--text);
+}
+
+.back-link {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.back-link:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 880px) {
   #add-form {
-    grid-template-columns: 1fr 120px 1fr 1fr 90px;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -256,6 +235,14 @@ body {
     width: 100%;
   }
 
+  #clear-cache-btn {
+    width: 100%;
+  }
+
+  .editor .button-row {
+    flex-direction: column;
+  }
+
   .list table,
   .list thead {
     display: block;
@@ -263,7 +250,7 @@ body {
 
   .list tr {
     display: grid;
-    grid-template-columns: 1fr 100px;
+    grid-template-columns: 1fr 90px;
     gap: 6px 12px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border);

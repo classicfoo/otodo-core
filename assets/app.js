@@ -3,7 +3,6 @@ import {
   putTask,
   deleteTask,
   addOutbox,
-  getOutbox,
 } from './db_local.js';
 import { dueStatus } from './dates.js';
 import { syncAll, ensureClientId } from './sync.js';
@@ -12,18 +11,12 @@ const taskBody = document.getElementById('task-body');
 const emptyState = document.getElementById('empty-state');
 const addForm = document.getElementById('add-form');
 const titleInput = document.getElementById('title-input');
-const priorityInput = document.getElementById('priority-input');
-const startInput = document.getElementById('start-input');
-const dueInput = document.getElementById('due-input');
-const offlineIndicator = document.getElementById('offline-indicator');
-const syncIndicator = document.getElementById('sync-indicator');
 const toast = document.getElementById('toast');
-const tabs = document.querySelectorAll('.tab');
+const clearCacheBtn = document.getElementById('clear-cache-btn');
 
 const state = {
   tasks: new Map(),
   rows: new Map(),
-  filter: 'all',
   clientId: null,
 };
 
@@ -58,21 +51,12 @@ function compareTasks(a, b) {
   return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
 }
 
-function filterTasks(task) {
-  if (state.filter === 'active') return task.completed === 0;
-  if (state.filter === 'completed') return task.completed === 1;
-  return true;
-}
-
 function createRow(task) {
   const row = document.createElement('tr');
   row.dataset.id = task.id;
   row.innerHTML = `
-    <td class="task-title"></td>
-    <td class="priority"></td>
-    <td class="start"></td>
+    <td class="task-title"><a class="task-link"></a></td>
     <td class="due"></td>
-    <td class="done"><input class="checkbox" type="checkbox" /></td>
     <td class="actions"><button class="delete-btn" type="button">Delete</button></td>
   `;
   state.rows.set(task.id, row);
@@ -84,11 +68,9 @@ function updateRow(task) {
   if (!row) {
     row = createRow(task);
   }
-  row.querySelector('.task-title').textContent = task.title;
-  const priorityEl = row.querySelector('.priority');
-  priorityEl.textContent = task.priority;
-  priorityEl.className = `priority ${task.priority}`;
-  row.querySelector('.start').textContent = task.start_date || '';
+  const taskLink = row.querySelector('.task-link');
+  taskLink.textContent = task.title;
+  taskLink.href = `/task.php?id=${encodeURIComponent(task.id)}`;
   const due = dueStatus(task.due_date);
   const dueCell = row.querySelector('.due');
   if (due.label) {
@@ -96,13 +78,12 @@ function updateRow(task) {
   } else {
     dueCell.textContent = '';
   }
-  row.querySelector('.checkbox').checked = task.completed === 1;
   row.classList.toggle('completed', task.completed === 1);
   return row;
 }
 
 function refreshList() {
-  const tasks = Array.from(state.tasks.values()).filter(filterTasks).sort(compareTasks);
+  const tasks = Array.from(state.tasks.values()).sort(compareTasks);
   const fragment = document.createDocumentFragment();
   tasks.forEach((task) => {
     const row = updateRow(task);
@@ -113,19 +94,8 @@ function refreshList() {
   emptyState.classList.toggle('hidden', tasks.length > 0);
 }
 
-async function updateSyncIndicator() {
-  const outbox = await getOutbox();
-  if (outbox.length) {
-    syncIndicator.textContent = `${outbox.length} pending`;
-    syncIndicator.classList.remove('hidden');
-  } else {
-    syncIndicator.classList.add('hidden');
-  }
-}
-
 async function addOutboxOp(op) {
   await addOutbox(op);
-  await updateSyncIndicator();
 }
 
 async function saveTask(task) {
@@ -149,9 +119,9 @@ async function handleAdd(event) {
   const task = {
     id: crypto.randomUUID(),
     title,
-    priority: priorityInput.value,
-    start_date: startInput.value || null,
-    due_date: dueInput.value || null,
+    priority: 'low',
+    start_date: null,
+    due_date: null,
     completed: 0,
     created_at: nowIso(),
     updated_at: nowIso(),
@@ -168,22 +138,6 @@ async function handleAdd(event) {
   triggerSync();
 }
 
-async function handleToggle(id, completed) {
-  const task = state.tasks.get(id);
-  if (!task) return;
-  const updated = { ...task, completed: completed ? 1 : 0, updated_at: nowIso() };
-  await saveTask(updated);
-  await addOutboxOp({
-    op_id: crypto.randomUUID(),
-    client_id: state.clientId,
-    type: 'toggle',
-    id,
-    completed: updated.completed,
-    updated_at: updated.updated_at,
-  });
-  triggerSync();
-}
-
 async function handleDelete(id) {
   await removeTask(id);
   await addOutboxOp({
@@ -195,43 +149,6 @@ async function handleDelete(id) {
   triggerSync();
 }
 
-function editTitle(cell, task) {
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.value = task.title;
-  input.className = 'inline-edit';
-  cell.textContent = '';
-  cell.appendChild(input);
-  input.focus();
-  input.select();
-
-  const commit = async () => {
-    const newTitle = input.value.trim();
-    if (newTitle && newTitle !== task.title) {
-      const updated = { ...task, title: newTitle, updated_at: nowIso() };
-      await saveTask(updated);
-      await addOutboxOp({
-        op_id: crypto.randomUUID(),
-        client_id: state.clientId,
-        type: 'upsert',
-        task: updated,
-      });
-      triggerSync();
-    }
-    cell.textContent = state.tasks.get(task.id)?.title || task.title;
-  };
-
-  input.addEventListener('blur', commit, { once: true });
-  input.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      input.blur();
-    }
-    if (event.key === 'Escape') {
-      cell.textContent = task.title;
-    }
-  });
-}
-
 function triggerSync() {
   if (!navigator.onLine) return;
   syncAll()
@@ -239,7 +156,6 @@ function triggerSync() {
       state.tasks.clear();
       tasks.forEach((task) => state.tasks.set(task.id, task));
       refreshList();
-      updateSyncIndicator();
       showToast('Synced');
     })
     .catch((error) => {
@@ -248,25 +164,40 @@ function triggerSync() {
     });
 }
 
-function updateOfflineIndicator() {
-  offlineIndicator.classList.toggle('hidden', navigator.onLine);
-  if (navigator.onLine) {
-    triggerSync();
-  }
-}
-
 async function init() {
   state.clientId = await ensureClientId();
   const tasks = await getAllTasks();
   tasks.forEach((task) => state.tasks.set(task.id, task));
   refreshList();
-  updateSyncIndicator();
-  updateOfflineIndicator();
   if (navigator.onLine) {
     triggerSync();
   }
 
   addForm.addEventListener('submit', handleAdd);
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener('click', async () => {
+      const originalLabel = clearCacheBtn.textContent;
+      clearCacheBtn.disabled = true;
+      clearCacheBtn.textContent = 'Clearing...';
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+        }
+        if ('caches' in window) {
+          const cacheKeys = await caches.keys();
+          await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+        }
+        showToast('Cache cleared');
+        setTimeout(() => window.location.reload(), 200);
+      } catch (error) {
+        console.error(error);
+        showToast('Cache clear failed');
+        clearCacheBtn.disabled = false;
+        clearCacheBtn.textContent = originalLabel;
+      }
+    });
+  }
 
   taskBody.addEventListener('click', (event) => {
     const row = event.target.closest('tr');
@@ -274,33 +205,13 @@ async function init() {
     const id = row.dataset.id;
     if (event.target.classList.contains('delete-btn')) {
       handleDelete(id);
+      return;
     }
-    if (event.target.classList.contains('task-title')) {
-      const task = state.tasks.get(id);
-      if (task) editTitle(event.target, task);
-    }
+    if (event.target.closest('a')) return;
+    window.location.href = `/task.php?id=${encodeURIComponent(id)}`;
   });
 
-  taskBody.addEventListener('change', (event) => {
-    if (!event.target.classList.contains('checkbox')) return;
-    const row = event.target.closest('tr');
-    const id = row?.dataset.id;
-    if (id) {
-      handleToggle(id, event.target.checked);
-    }
-  });
-
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => {
-      tabs.forEach((t) => t.classList.remove('active'));
-      tab.classList.add('active');
-      state.filter = tab.dataset.filter;
-      refreshList();
-    });
-  });
-
-  window.addEventListener('online', updateOfflineIndicator);
-  window.addEventListener('offline', updateOfflineIndicator);
+  window.addEventListener('online', triggerSync);
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
