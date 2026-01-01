@@ -1,66 +1,80 @@
 <?php
-require __DIR__ . '/auth.php';
+declare(strict_types=1);
 
-$errors = [];
-$successMessage = '';
-$email = '';
+session_start();
 
-$action = $_POST['action'] ?? null;
-
-if ($action === 'login') {
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    [$errors, $successMessage] = handle_login($db, $email, $password);
-} elseif ($action === 'logout') {
-    $successMessage = handle_logout();
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
-
-$currentUser = current_user();
-
-$pageTitle = 'Commit';
-$pageHeading = 'Welcome back';
-$pageHint = 'Sign in to continue to your account.';
-
-if ($currentUser) {
-    $pageHeading = 'Welcome, ' . $currentUser['email'];
-    $pageHint = 'You are signed in with your username.';
-    $showPageHeader = false;
-}
-
-include __DIR__ . '/auth_header.php';
+$csrfToken = $_SESSION['csrf_token'];
 ?>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>" />
+  <title>Otodo</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>Otodo</h1>
+      <div class="status">
+        <span id="offline-indicator" class="badge offline hidden">Offline</span>
+        <span id="sync-indicator" class="badge sync hidden">0 pending</span>
+      </div>
+    </header>
 
-<?php if ($errors): ?>
-  <div class="alert alert-danger" role="alert">
-    <ul class="mb-0">
-      <?php foreach ($errors as $error): ?>
-        <li><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></li>
-      <?php endforeach; ?>
-    </ul>
+    <section class="controls">
+      <form id="add-form" autocomplete="off">
+        <input id="title-input" name="title" type="text" placeholder="New task" required />
+        <select id="priority-input" name="priority">
+          <option value="low">Low</option>
+          <option value="med">Med</option>
+          <option value="high">High</option>
+        </select>
+        <label>
+          Start
+          <input id="start-input" name="start" type="date" />
+        </label>
+        <label>
+          Due
+          <input id="due-input" name="due" type="date" />
+        </label>
+        <button type="submit">Add</button>
+      </form>
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab active" data-filter="all">All</button>
+        <button type="button" class="tab" data-filter="active">Active</button>
+        <button type="button" class="tab" data-filter="completed">Completed</button>
+      </div>
+    </section>
+
+    <section class="list">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Priority</th>
+            <th>Start</th>
+            <th>Due</th>
+            <th>Done</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="task-body"></tbody>
+      </table>
+      <p id="empty-state" class="empty">No tasks yet.</p>
+    </section>
   </div>
-<?php endif; ?>
 
-<?php if (!$currentUser): ?>
-  <section class="surface">
-    <h2 class="h5">Log in</h2>
-    <p class="hint">Welcome back. Enter your credentials.</p>
-    <form method="post" class="d-grid gap-3">
-      <input type="hidden" name="action" value="login">
-      <div>
-        <label class="form-label" for="login-email">Email</label>
-        <input class="form-control" type="email" id="login-email" name="email" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>" required>
-      </div>
-      <div>
-        <label class="form-label" for="login-password">Password</label>
-        <input class="form-control" type="password" id="login-password" name="password" required>
-      </div>
-      <button type="submit" class="btn btn-neutral">Sign in</button>
-    </form>
-    <div class="divider"></div>
-    <p class="hint mb-0">Don’t have an account? <a href="register.php">Create one here</a>.</p>
-  </section>
-<?php endif; ?>
+  <div id="toast" class="toast hidden"></div>
 
-<?php
-include __DIR__ . '/auth_footer.php';
-?>
+  <script>
+    window.OTODO_CSRF = "<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>";
+  </script>
+  <script type="module" src="/assets/app.js"></script>
+</body>
+</html>

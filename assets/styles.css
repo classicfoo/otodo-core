@@ -1,0 +1,280 @@
+:root {
+  color-scheme: light;
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --text: #1d232a;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: #2563eb;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 980px;
+  margin: 32px auto 80px;
+  padding: 0 20px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.offline {
+  background: #fee2e2;
+  color: var(--danger);
+}
+
+.badge.sync {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.controls {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--border);
+}
+
+#add-form {
+  display: grid;
+  grid-template-columns: 1fr 120px 140px 140px 90px;
+  gap: 12px;
+  align-items: end;
+}
+
+#add-form input,
+#add-form select,
+#add-form button {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+#add-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+#add-form button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tab {
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.tab.active {
+  background: var(--text);
+  color: #fff;
+  border-color: var(--text);
+}
+
+.list {
+  margin-top: 18px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.list th,
+.list td {
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.list th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.list tr:last-child td {
+  border-bottom: none;
+}
+
+.task-title {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.priority {
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.priority.low {
+  color: var(--success);
+}
+
+.priority.med {
+  color: var(--warning);
+}
+
+.priority.high {
+  color: var(--danger);
+}
+
+.due-label {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: var(--muted);
+}
+
+.due-label.overdue {
+  background: #fee2e2;
+  color: var(--danger);
+}
+
+.due-label.today {
+  background: #dcfce7;
+  color: var(--success);
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 20px 0 10px;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--text);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  box-shadow: 0 12px 18px rgba(15, 23, 42, 0.2);
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+}
+
+.delete-btn {
+  border: none;
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.inline-edit {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+@media (max-width: 880px) {
+  #add-form {
+    grid-template-columns: 1fr 120px 1fr 1fr 90px;
+  }
+}
+
+@media (max-width: 720px) {
+  #add-form {
+    grid-template-columns: 1fr;
+  }
+
+  #add-form button {
+    width: 100%;
+  }
+
+  .list table,
+  .list thead {
+    display: block;
+  }
+
+  .list tr {
+    display: grid;
+    grid-template-columns: 1fr 100px;
+    gap: 6px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .list td,
+  .list th {
+    border-bottom: none;
+  }
+
+  .list thead {
+    display: none;
+  }
+}
