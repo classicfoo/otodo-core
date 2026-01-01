@@ -133,6 +133,9 @@ $currentUser = $currentUser ?? null;
         color: #9ca3af;
         margin: auto 0 0;
       }
+      .hidden {
+        display: none !important;
+      }
       @media (max-width: 576px) {
         .app-shell {
           margin: 24px auto;
@@ -181,7 +184,7 @@ $currentUser = $currentUser ?? null;
           </p>
           <div class="menu-card">
             <?php if ($currentUser): ?>
-              <form method="post" class="menu-action">
+              <form method="post" class="menu-action" data-offline-logout="true">
                 <input type="hidden" name="action" value="logout">
                 <button type="submit">Logout</button>
               </form>

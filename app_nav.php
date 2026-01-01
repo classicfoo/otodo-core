@@ -1,5 +1,6 @@
 <?php
 $includeAllTasksLink = $includeAllTasksLink ?? false;
+$currentUser = $currentUser ?? null;
 ?>
 <nav class="app-nav">
   <div class="nav-row">
@@ -24,13 +25,16 @@ $includeAllTasksLink = $includeAllTasksLink ?? false;
   <div class="offcanvas-body">
     <div class="menu-panel">
       <p class="menu-greeting">
-        Hello, <?php echo htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8'); ?>
+        Hello,
+        <span id="menu-user-email" data-server-email="<?php echo $currentUser ? htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') : ''; ?>">
+          <?php echo $currentUser ? htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') : 'Offline session'; ?>
+        </span>
       </p>
       <div class="menu-card">
         <?php if ($includeAllTasksLink): ?>
           <a class="menu-item" href="/index.php">All tasks</a>
         <?php endif; ?>
-        <form method="post" class="menu-action">
+        <form method="post" class="menu-action" data-offline-logout="true">
           <input type="hidden" name="action" value="logout">
           <button type="submit">Logout</button>
         </form>
@@ -39,3 +43,4 @@ $includeAllTasksLink = $includeAllTasksLink ?? false;
     </div>
   </div>
 </div>
+<div id="offline-banner" class="offline-banner hidden" role="status">Offline mode</div>
