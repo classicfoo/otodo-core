@@ -3,13 +3,15 @@ require __DIR__ . '/auth.php';
 
 $errors = [];
 $email = '';
+$rememberMe = false;
 
 $action = $_POST['action'] ?? null;
 
 if ($action === 'login') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    [$errors, $successMessage] = handle_login($db, $email, $password);
+    $rememberMe = !empty($_POST['remember_me']);
+    [$errors, $successMessage] = handle_login($db, $email, $password, $rememberMe);
     if (!$errors) {
         $currentUser = current_user();
         $offlineLoginPayload = [
@@ -21,7 +23,7 @@ if ($action === 'login') {
         ];
     }
 } elseif ($action === 'logout') {
-    $successMessage = handle_logout();
+    $successMessage = handle_logout($db);
 }
 
 $currentUser = current_user();
@@ -78,6 +80,10 @@ include __DIR__ . '/auth_header.php';
       <div>
         <label class="form-label" for="login-password">Password</label>
         <input class="form-control" type="password" id="login-password" name="password" required>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="login-remember" name="remember_me" value="1" <?php echo $rememberMe ? 'checked' : ''; ?>>
+        <label class="form-check-label" for="login-remember">Remember me</label>
       </div>
       <button type="submit" class="btn btn-neutral">Sign in</button>
     </form>

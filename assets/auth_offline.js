@@ -3,6 +3,8 @@ import { getMeta, setMeta } from './db_local.js';
 const OFFLINE_AUTH_KEY = 'offline_auth';
 const OFFLINE_SESSION_KEY = 'offline_session';
 const PENDING_PASSWORD_KEY = 'otodo_pending_password';
+const REHYDRATE_ATTEMPT_KEY = 'otodo_rehydrate_attempted_at';
+const REHYDRATE_COOLDOWN_MS = 30000;
 
 function bufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -143,6 +145,31 @@ function clearPendingPassword() {
   sessionStorage.removeItem(PENDING_PASSWORD_KEY);
 }
 
+async function attemptServerRehydrate() {
+  if (!navigator.onLine) {
+    return false;
+  }
+  const lastAttempt = Number(sessionStorage.getItem(REHYDRATE_ATTEMPT_KEY) || 0);
+  if (lastAttempt && Date.now() - lastAttempt < REHYDRATE_COOLDOWN_MS) {
+    return false;
+  }
+  sessionStorage.setItem(REHYDRATE_ATTEMPT_KEY, String(Date.now()));
+  try {
+    const response = await fetch(window.location.pathname, {
+      method: 'GET',
+      cache: 'no-store',
+      credentials: 'include',
+    });
+    if (response.ok) {
+      window.location.reload();
+      return true;
+    }
+    return false;
+  } catch (error) {
+    return false;
+  }
+}
+
 async function handleLoginPayload() {
   const payload = window.OTODO_LOGIN_PAYLOAD;
   if (!payload) {
@@ -152,6 +179,7 @@ async function handleLoginPayload() {
   const pendingPassword = sessionStorage.getItem(PENDING_PASSWORD_KEY);
   await storeOfflineAuth(payload, pendingPassword);
   clearPendingPassword();
+  sessionStorage.removeItem(REHYDRATE_ATTEMPT_KEY);
   window.location.href = '/index.php';
 }
 
@@ -189,16 +217,22 @@ function attachLogoutHandlers() {
 }
 
 async function applyOfflineUi(session, isOnline) {
-  if (!session) return;
-  const online = isOnline ?? navigator.onLine;
-  if (online && session.mode !== 'offline') {
+  const banner = document.getElementById('offline-banner');
+  const indicator = document.getElementById('offline-indicator');
+  if (!session) {
+    banner?.classList.add('hidden');
+    indicator?.classList.add('hidden');
     return;
   }
-  const banner = document.getElementById('offline-banner');
+  const online = isOnline ?? navigator.onLine;
+  if (online && session.mode !== 'offline') {
+    banner?.classList.add('hidden');
+    indicator?.classList.add('hidden');
+    return;
+  }
   if (banner) {
     banner.classList.remove('hidden');
   }
-  const indicator = document.getElementById('offline-indicator');
   if (indicator) {
     indicator.classList.remove('hidden');
   }
@@ -212,6 +246,7 @@ async function enforceAppSession() {
   if (window.OTODO_SERVER_AUTH) {
     return { allowed: true, session: null, isOnline: true };
   }
+  await attemptServerRehydrate();
   const session = await getOfflineSession();
   if (!session) {
     window.location.href = '/login.php';

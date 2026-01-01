@@ -16,7 +16,7 @@ if ($action === 'register') {
     $password = $_POST['password'] ?? '';
     [$errors, $successMessage] = handle_register($db, $email, $firstName, $lastName, $password);
 } elseif ($action === 'logout') {
-    $successMessage = handle_logout();
+    $successMessage = handle_logout($db);
 }
 
 $currentUser = current_user();
