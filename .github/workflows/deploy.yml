@@ -31,6 +31,9 @@ jobs:
             mirror -R --verbose --delete --no-perms \
             --exclude-glob node_modules/** \
             --exclude-glob .env \
+            --exclude .git/ \
+            --exclude .github/ \
+            --exclude data/ \
             ./ "$FTP_DIR"
           quit
           EOF
