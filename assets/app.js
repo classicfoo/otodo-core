@@ -303,7 +303,7 @@ async function init() {
   window.addEventListener('offline', updateOfflineIndicator);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/assets/sw.js').catch((error) => {
+    navigator.serviceWorker.register('/sw.js').catch((error) => {
       console.warn('Service worker registration failed', error);
     });
   }
