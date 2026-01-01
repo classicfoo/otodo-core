@@ -1,7 +1,6 @@
 import {
   getAllTasks,
   putTask,
-  deleteTask,
   addOutbox,
 } from './db_local.js';
 import { dueStatus } from './dates.js';
@@ -12,7 +11,6 @@ const emptyState = document.getElementById('empty-state');
 const addForm = document.getElementById('add-form');
 const titleInput = document.getElementById('title-input');
 const toast = document.getElementById('toast');
-const clearCacheBtn = document.getElementById('clear-cache-btn');
 
 const state = {
   tasks: new Map(),
@@ -57,7 +55,6 @@ function createRow(task) {
   row.innerHTML = `
     <td class="task-title"><a class="task-link"></a></td>
     <td class="due"></td>
-    <td class="actions"><button class="delete-btn" type="button">Delete</button></td>
   `;
   state.rows.set(task.id, row);
   return row;
@@ -104,14 +101,6 @@ async function saveTask(task) {
   refreshList();
 }
 
-async function removeTask(id) {
-  state.tasks.delete(id);
-  await deleteTask(id);
-  const row = state.rows.get(id);
-  if (row) row.remove();
-  refreshList();
-}
-
 async function handleAdd(event) {
   event.preventDefault();
   const title = titleInput.value.trim();
@@ -135,17 +124,6 @@ async function handleAdd(event) {
   });
   addForm.reset();
   titleInput.focus();
-  triggerSync();
-}
-
-async function handleDelete(id) {
-  await removeTask(id);
-  await addOutboxOp({
-    op_id: crypto.randomUUID(),
-    client_id: state.clientId,
-    type: 'delete',
-    id,
-  });
   triggerSync();
 }
 
@@ -174,39 +152,11 @@ async function init() {
   }
 
   addForm.addEventListener('submit', handleAdd);
-  if (clearCacheBtn) {
-    clearCacheBtn.addEventListener('click', async () => {
-      const originalLabel = clearCacheBtn.textContent;
-      clearCacheBtn.disabled = true;
-      clearCacheBtn.textContent = 'Clearing...';
-      try {
-        if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map((registration) => registration.unregister()));
-        }
-        if ('caches' in window) {
-          const cacheKeys = await caches.keys();
-          await Promise.all(cacheKeys.map((key) => caches.delete(key)));
-        }
-        showToast('Cache cleared');
-        setTimeout(() => window.location.reload(), 200);
-      } catch (error) {
-        console.error(error);
-        showToast('Cache clear failed');
-        clearCacheBtn.disabled = false;
-        clearCacheBtn.textContent = originalLabel;
-      }
-    });
-  }
 
   taskBody.addEventListener('click', (event) => {
     const row = event.target.closest('tr');
     if (!row) return;
     const id = row.dataset.id;
-    if (event.target.classList.contains('delete-btn')) {
-      handleDelete(id);
-      return;
-    }
     if (event.target.closest('a')) return;
     window.location.href = `/task.php?id=${encodeURIComponent(id)}`;
   });
