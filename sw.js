@@ -70,6 +70,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+          return response;
+        })
+        .catch(() => {
+          if (url.pathname === '/login.php' || url.pathname === '/register.php') {
+            return caches.match(url.pathname);
+          }
+          if (url.pathname.startsWith('/task.php')) {
+            return caches.match('/task.php');
+          }
+          return caches.match('/index.php');
+        }),
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
