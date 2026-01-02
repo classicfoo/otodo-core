@@ -17,6 +17,15 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 $csrfToken = $_SESSION['csrf_token'];
 $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'active';
+$taskDetailsConfig = [
+    'lineRules' => [],
+    'textColor' => '#1f2328',
+    'dateFormats' => [
+        'YYYY-MM-DD',
+        'MMM D, YYYY',
+    ],
+    'textExpanders' => (object)[],
+];
 ?>
 <!doctype html>
 <html lang="en">
@@ -106,7 +115,11 @@ $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'activ
       </div>
       <div class="mb-3">
         <label class="form-label" for="edit-description">Description</label>
-        <textarea id="edit-description" name="description" class="form-control" rows="4" spellcheck="false"></textarea>
+        <div class="task-details-editor" data-task-details-editor>
+          <textarea id="edit-description" name="description" class="form-control" rows="4" spellcheck="false"></textarea>
+          <code id="edit-description-preview" class="form-control mt-2" aria-live="polite"></code>
+          <input type="hidden" id="edit-description-normalized" name="description_normalized" />
+        </div>
       </div>
       <div class="d-flex align-items-center gap-2">
         <a href="/index.php" class="btn btn-secondary">Back</a>
@@ -121,8 +134,17 @@ $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'activ
     window.OTODO_CSRF = "<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>";
     window.OTODO_SERVER_AUTH = <?php echo $serverAuth ? 'true' : 'false'; ?>;
     window.OTODO_AUTH_GATE = 'app';
+    window.OTODO_TASK_DETAILS_CONFIG = <?php echo json_encode($taskDetailsConfig, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/task-details.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.initTaskDetailsEditor === 'function') {
+        window.taskDetailsEditor = window.initTaskDetailsEditor(window.OTODO_TASK_DETAILS_CONFIG);
+      }
+    });
+  </script>
   <script type="module" src="/assets/auth_offline.js"></script>
   <script type="module" src="/assets/task.js"></script>
 </body>

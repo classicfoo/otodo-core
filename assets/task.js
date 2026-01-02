@@ -8,6 +8,7 @@ const completedInput = document.getElementById('edit-completed');
 const priorityInput = document.getElementById('edit-priority');
 const starInput = document.getElementById('edit-star');
 const descriptionInput = document.getElementById('edit-description');
+const descriptionNormalizedInput = document.getElementById('edit-description-normalized');
 const hashtagsInput = document.getElementById('edit-hashtags');
 const deleteButton = document.getElementById('delete-task');
 const missingTask = document.getElementById('missing-task');
@@ -106,8 +107,14 @@ function populateForm(loadedTask) {
   if (descriptionInput) {
     descriptionInput.value = loadedTask.description || '';
   }
+  if (descriptionNormalizedInput) {
+    descriptionNormalizedInput.value = loadedTask.description || '';
+  }
   if (hashtagsInput) {
     hashtagsInput.value = loadedTask.hashtags || '';
+  }
+  if (window.taskDetailsEditor && typeof window.taskDetailsEditor.updateDetails === 'function') {
+    window.taskDetailsEditor.updateDetails();
   }
 }
 
@@ -148,7 +155,13 @@ function buildUpdatedTask() {
     updated.priority = priorityInput.value || task.priority || 'low';
   }
   if (descriptionInput) {
-    updated.description = descriptionInput.value || '';
+    if (window.taskDetailsEditor && typeof window.taskDetailsEditor.updateDetails === 'function') {
+      updated.description = window.taskDetailsEditor.updateDetails();
+    } else if (descriptionNormalizedInput) {
+      updated.description = descriptionNormalizedInput.value || '';
+    } else {
+      updated.description = descriptionInput.value || '';
+    }
   }
   if (hashtagsInput) {
     updated.hashtags = hashtagsInput.value || '';
