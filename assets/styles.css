@@ -11,6 +11,7 @@
   --warning: #f59e0b;
   --content-max-width: 900px;
   --content-padding: clamp(16px, 4vw, 36px);
+  --details-text-color: #1f2937;
 }
 
 * {
@@ -488,6 +489,105 @@ body {
 
 .editor .button-row .danger {
   background: var(--danger);
+}
+
+.task-details-editor {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-items: stretch;
+  color: var(--details-text-color);
+}
+
+.task-details-editor textarea,
+.task-details-editor code {
+  min-height: 160px;
+  font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.task-details-editor textarea {
+  resize: vertical;
+}
+
+.task-details-editor code {
+  color: var(--details-text-color);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.code-line {
+  display: block;
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid transparent;
+  color: var(--details-text-color);
+}
+
+.code-line-task {
+  border-left-color: #2563eb;
+  font-weight: 600;
+}
+
+.code-line-note {
+  border-left-color: #0ea5e9;
+  color: #0f172a;
+}
+
+.code-line-milestone {
+  border-left-color: #f59e0b;
+  font-weight: 600;
+}
+
+.code-line-heading {
+  border-left-color: #4f46e5;
+  font-weight: 700;
+}
+
+.code-line-done {
+  border-left-color: #22c55e;
+  color: #16a34a;
+  text-decoration: line-through;
+}
+
+.inline-hashtag {
+  background: #f3e8ff;
+  color: #6d28d9;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.inline-date {
+  background: #e0f2fe;
+  color: #0284c7;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.token.tag {
+  color: #2563eb;
+}
+
+.token.tag-name {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.token.attr-name {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.token.attr-value {
+  color: #16a34a;
 }
 
 .checkbox-field {
