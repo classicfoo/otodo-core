@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/auth.php';
+require __DIR__ . '/line_rules.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logout') {
     handle_logout($db);
@@ -12,13 +13,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logou
 $currentUser = current_user();
 $serverAuth = (bool)$currentUser;
 
+$db->exec('CREATE TABLE IF NOT EXISTS user_settings (
+    user_id INTEGER PRIMARY KEY,
+    line_rules_json TEXT,
+    updated_at TEXT
+);');
+
+$lineRules = get_default_line_rules();
+if ($currentUser) {
+    $stmt = $db->prepare('SELECT line_rules_json FROM user_settings WHERE user_id = :user_id');
+    $stmt->bindValue(':user_id', (int)$currentUser['id'], SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result->fetchArray(SQLITE3_ASSOC);
+    $decodedRules = decode_line_rules_from_storage($row['line_rules_json'] ?? null);
+    if ($decodedRules !== null) {
+        $lineRules = sanitize_line_rules($decodedRules);
+    }
+}
+
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 $csrfToken = $_SESSION['csrf_token'];
 $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'active';
 $taskDetailsConfig = [
-    'lineRules' => [],
+    'lineRules' => $lineRules,
     'textColor' => '#1f2328',
     'dateFormats' => [
         'YYYY-MM-DD',
@@ -134,6 +153,7 @@ $taskDetailsConfig = [
     window.OTODO_CSRF = "<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>";
     window.OTODO_SERVER_AUTH = <?php echo $serverAuth ? 'true' : 'false'; ?>;
     window.OTODO_AUTH_GATE = 'app';
+    window.OTODO_LINE_RULES = <?php echo json_encode($lineRules, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
     window.OTODO_TASK_DETAILS_CONFIG = <?php echo json_encode($taskDetailsConfig, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -141,7 +161,11 @@ $taskDetailsConfig = [
   <script>
     window.addEventListener('DOMContentLoaded', () => {
       if (typeof window.initTaskDetailsEditor === 'function') {
-        window.taskDetailsEditor = window.initTaskDetailsEditor(window.OTODO_TASK_DETAILS_CONFIG);
+        const config = {
+          ...window.OTODO_TASK_DETAILS_CONFIG,
+          lineRules: window.OTODO_LINE_RULES,
+        };
+        window.taskDetailsEditor = window.initTaskDetailsEditor(config);
       }
     });
   </script>

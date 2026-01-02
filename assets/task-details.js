@@ -1,4 +1,24 @@
 (function initTaskDetailsModule() {
+  function applyLineRules(value, rules) {
+    if (!Array.isArray(rules) || rules.length === 0) return value;
+    const lines = value.split('\n');
+    const updated = lines.map((line) => {
+      let nextLine = line;
+      rules.forEach((rule) => {
+        if (!rule || !rule.pattern) return;
+        try {
+          const flags = rule.flags || '';
+          const regex = new RegExp(rule.pattern, flags);
+          nextLine = nextLine.replace(regex, rule.replacement || '');
+        } catch (error) {
+          // Ignore invalid rules.
+        }
+      });
+      return nextLine;
+    });
+    return updated.join('\n');
+  }
+
   function normalizeDetails(value, config) {
     if (!value) return '';
     let normalized = value.replace(/\r\n/g, '\n').replace(/\s+$/g, '');
@@ -7,6 +27,7 @@
       if (!trigger) return;
       normalized = normalized.split(trigger).join(String(replacement));
     });
+    normalized = applyLineRules(normalized, config.lineRules);
     return normalized;
   }
 
