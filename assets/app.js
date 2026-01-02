@@ -17,7 +17,7 @@ const state = {
 
 const listFilter = new URLSearchParams(window.location.search).get('view') === 'completed'
   ? 'completed'
-  : 'all';
+  : 'active';
 
 function showToast(message) {
   toast.textContent = message;
@@ -87,7 +87,7 @@ function updateRow(task) {
 
 function refreshList() {
   const tasks = Array.from(state.tasks.values())
-    .filter((task) => (listFilter === 'completed' ? task.completed === 1 : true))
+    .filter((task) => (listFilter === 'completed' ? task.completed === 1 : task.completed !== 1))
     .sort(compareTasks);
   const fragment = document.createDocumentFragment();
   tasks.forEach((task) => {
@@ -97,7 +97,7 @@ function refreshList() {
   taskBody.innerHTML = '';
   taskBody.appendChild(fragment);
   if (emptyState) {
-    emptyState.textContent = listFilter === 'completed' ? 'No completed tasks yet.' : 'No tasks yet.';
+    emptyState.textContent = listFilter === 'completed' ? 'No completed tasks yet.' : 'No active tasks yet.';
   }
   emptyState.classList.toggle('hidden', tasks.length > 0);
 }

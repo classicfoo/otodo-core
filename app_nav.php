@@ -1,5 +1,5 @@
 <?php
-$taskFilter = $taskFilter ?? 'all';
+$taskFilter = $taskFilter ?? 'active';
 $currentUser = $currentUser ?? null;
 $isCompletedView = $taskFilter === 'completed';
 ?>
@@ -32,7 +32,7 @@ $isCompletedView = $taskFilter === 'completed';
         </span>
       </p>
       <div class="menu-card">
-        <a class="menu-item" href="/index.php" <?php echo $isCompletedView ? '' : 'aria-current="page"'; ?>>All tasks</a>
+        <a class="menu-item" href="/index.php" <?php echo $isCompletedView ? '' : 'aria-current="page"'; ?>>Active tasks</a>
         <a class="menu-item" href="/index.php?view=completed" <?php echo $isCompletedView ? 'aria-current="page"' : ''; ?>>Completed tasks</a>
         <div class="menu-action">
           <button id="clear-cache-btn" type="button">Clear cache</button>
