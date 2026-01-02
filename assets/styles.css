@@ -9,6 +9,8 @@
   --danger: #dc2626;
   --success: #16a34a;
   --warning: #f59e0b;
+  --content-max-width: 900px;
+  --content-padding: clamp(16px, 4vw, 36px);
 }
 
 * {
@@ -23,9 +25,9 @@ body {
 }
 
 .app {
-  max-width: 980px;
+  max-width: var(--content-max-width);
   margin: 32px auto 80px;
-  padding: 0 20px;
+  padding: 0 var(--content-padding);
 }
 
 .app-nav {
@@ -34,9 +36,9 @@ body {
 }
 
 .nav-row {
-  max-width: 980px;
+  max-width: var(--content-max-width);
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 16px var(--content-padding);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -85,9 +87,9 @@ body {
 }
 
 .offline-banner {
-  max-width: 980px;
+  max-width: var(--content-max-width);
   margin: 12px auto 0;
-  padding: 8px 20px;
+  padding: 8px var(--content-padding);
   border-radius: 999px;
   background: #fee2e2;
   color: var(--danger);
