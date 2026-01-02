@@ -1,6 +1,7 @@
 <?php
-$includeAllTasksLink = $includeAllTasksLink ?? false;
+$taskFilter = $taskFilter ?? 'active';
 $currentUser = $currentUser ?? null;
+$isCompletedView = $taskFilter === 'completed';
 ?>
 <nav class="app-nav">
   <div class="nav-row">
@@ -31,9 +32,8 @@ $currentUser = $currentUser ?? null;
         </span>
       </p>
       <div class="menu-card">
-        <?php if ($includeAllTasksLink): ?>
-          <a class="menu-item" href="/index.php">All tasks</a>
-        <?php endif; ?>
+        <a class="menu-item" href="/index.php" <?php echo $isCompletedView ? '' : 'aria-current="page"'; ?>>Active tasks</a>
+        <a class="menu-item" href="/index.php?view=completed" <?php echo $isCompletedView ? 'aria-current="page"' : ''; ?>>Completed tasks</a>
         <div class="menu-action">
           <button id="clear-cache-btn" type="button">Clear cache</button>
         </div>

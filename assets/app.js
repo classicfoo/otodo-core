@@ -15,6 +15,10 @@ const state = {
   clientId: null,
 };
 
+const listFilter = new URLSearchParams(window.location.search).get('view') === 'completed'
+  ? 'completed'
+  : 'active';
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.remove('hidden');
@@ -64,7 +68,12 @@ function updateRow(task) {
   }
   const taskLink = row.querySelector('.task-link');
   taskLink.textContent = task.title;
-  taskLink.href = `/task.php?id=${encodeURIComponent(task.id)}`;
+  const taskUrl = new URL('/task.php', window.location.origin);
+  taskUrl.searchParams.set('id', task.id);
+  if (listFilter === 'completed') {
+    taskUrl.searchParams.set('view', 'completed');
+  }
+  taskLink.href = `${taskUrl.pathname}${taskUrl.search}`;
   const due = dueStatus(task.due_date);
   const dueCell = row.querySelector('.due');
   if (due.label) {
@@ -77,7 +86,9 @@ function updateRow(task) {
 }
 
 function refreshList() {
-  const tasks = Array.from(state.tasks.values()).sort(compareTasks);
+  const tasks = Array.from(state.tasks.values())
+    .filter((task) => (listFilter === 'completed' ? task.completed === 1 : task.completed !== 1))
+    .sort(compareTasks);
   const fragment = document.createDocumentFragment();
   tasks.forEach((task) => {
     const row = updateRow(task);
@@ -85,6 +96,9 @@ function refreshList() {
   });
   taskBody.innerHTML = '';
   taskBody.appendChild(fragment);
+  if (emptyState) {
+    emptyState.textContent = listFilter === 'completed' ? 'No completed tasks yet.' : 'No active tasks yet.';
+  }
   emptyState.classList.toggle('hidden', tasks.length > 0);
 }
 
@@ -179,7 +193,12 @@ async function init() {
     if (!row) return;
     const id = row.dataset.id;
     if (event.target.closest('a')) return;
-    window.location.href = `/task.php?id=${encodeURIComponent(id)}`;
+    const taskUrl = new URL('/task.php', window.location.origin);
+    taskUrl.searchParams.set('id', id);
+    if (listFilter === 'completed') {
+      taskUrl.searchParams.set('view', 'completed');
+    }
+    window.location.href = `${taskUrl.pathname}${taskUrl.search}`;
   });
 
   window.addEventListener('online', triggerSync);
