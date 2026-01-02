@@ -34,6 +34,9 @@ $currentUser = $currentUser ?? null;
         <?php if ($includeAllTasksLink): ?>
           <a class="menu-item" href="/index.php">All tasks</a>
         <?php endif; ?>
+        <div class="menu-action">
+          <button id="clear-cache-btn" type="button">Clear cache</button>
+        </div>
         <form method="post" class="menu-action" data-offline-logout="true">
           <input type="hidden" name="action" value="logout">
           <button type="submit">Logout</button>

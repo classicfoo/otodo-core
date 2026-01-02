@@ -140,6 +140,11 @@ body {
   margin: 0;
 }
 
+.menu-action button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .menu-footer {
   font-size: 0.85rem;
   color: var(--muted);
@@ -255,21 +260,6 @@ body {
   border: none;
   cursor: pointer;
   font-weight: 600;
-}
-
-#clear-cache-btn {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: #fff;
-  color: var(--text);
-  cursor: pointer;
-  font-weight: 600;
-}
-
-#clear-cache-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .list {
@@ -405,10 +395,6 @@ body {
   }
 
   #add-form button {
-    width: 100%;
-  }
-
-  #clear-cache-btn {
     width: 100%;
   }
 
