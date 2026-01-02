@@ -28,7 +28,7 @@ $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'activ
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
-<body>
+<body class="page-index">
   <?php
   include __DIR__ . '/app_nav.php';
   ?>
@@ -41,15 +41,7 @@ $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'activ
     </section>
 
     <section class="list">
-      <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Due</th>
-          </tr>
-        </thead>
-        <tbody id="task-body"></tbody>
-      </table>
+      <div id="task-body" class="task-list"></div>
       <p id="empty-state" class="empty">No tasks yet.</p>
     </section>
   </div>
