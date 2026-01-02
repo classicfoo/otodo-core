@@ -19,6 +19,10 @@ const listFilter = new URLSearchParams(window.location.search).get('view') === '
   ? 'completed'
   : 'active';
 
+function isCompleted(task) {
+  return Number(task.completed) === 1;
+}
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.remove('hidden');
@@ -30,8 +34,10 @@ function nowIso() {
 }
 
 function compareTasks(a, b) {
-  if (a.completed !== b.completed) {
-    return a.completed - b.completed;
+  const aCompleted = isCompleted(a);
+  const bCompleted = isCompleted(b);
+  if (aCompleted !== bCompleted) {
+    return aCompleted ? 1 : -1;
   }
   const aDue = a.due_date ? new Date(a.due_date).getTime() : null;
   const bDue = b.due_date ? new Date(b.due_date).getTime() : null;
@@ -81,13 +87,13 @@ function updateRow(task) {
   } else {
     dueCell.textContent = '';
   }
-  row.classList.toggle('completed', task.completed === 1);
+  row.classList.toggle('completed', isCompleted(task));
   return row;
 }
 
 function refreshList() {
   const tasks = Array.from(state.tasks.values())
-    .filter((task) => (listFilter === 'completed' ? task.completed === 1 : task.completed !== 1))
+    .filter((task) => (listFilter === 'completed' ? isCompleted(task) : !isCompleted(task)))
     .sort(compareTasks);
   const fragment = document.createDocumentFragment();
   tasks.forEach((task) => {

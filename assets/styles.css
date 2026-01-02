@@ -307,6 +307,11 @@ body {
   text-decoration: underline;
 }
 
+.completed .task-link {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
 .due-label {
   display: inline-block;
   padding: 2px 8px;
