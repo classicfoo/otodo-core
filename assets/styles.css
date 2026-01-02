@@ -232,6 +232,14 @@ body {
 
 #add-form {
   flex: 1 1 320px;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
 }
 
 #add-form input,
@@ -243,6 +251,21 @@ body {
   border-radius: 10px;
   border: 1px solid var(--border);
   font-size: 14px;
+}
+
+#add-form input,
+#add-form select {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+#add-form button {
+  border: none;
+  border-radius: 0;
+  border-left: 1px solid var(--border);
+  min-width: 120px;
 }
 
 #add-form label,
@@ -388,20 +411,7 @@ body {
   text-decoration: underline;
 }
 
-@media (max-width: 880px) {
-  #add-form {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 720px) {
-  #add-form {
-    grid-template-columns: 1fr;
-  }
-
-  #add-form button {
-    width: 100%;
-  }
 
   .editor .button-row {
     flex-direction: column;
