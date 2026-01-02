@@ -16,6 +16,7 @@ if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 $csrfToken = $_SESSION['csrf_token'];
+$taskFilter = ($_GET['view'] ?? 'all') === 'completed' ? 'completed' : 'all';
 ?>
 <!doctype html>
 <html lang="en">
@@ -29,7 +30,6 @@ $csrfToken = $_SESSION['csrf_token'];
 </head>
 <body>
   <?php
-  $includeAllTasksLink = true;
   include __DIR__ . '/app_nav.php';
   ?>
   <div class="app">
