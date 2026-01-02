@@ -24,39 +24,95 @@ $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'activ
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>" />
-  <title>Otodo</title>
+  <title>Task Details</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
-<body>
-  <?php
-  include __DIR__ . '/app_nav.php';
-  ?>
-  <div class="app">
-
-    <section class="controls editor">
-      <details class="editor-menu">
-        <summary class="menu-trigger" aria-label="Task options">…</summary>
-        <div class="menu-panel">
-          <button id="delete-task" type="button" class="menu-delete">Delete</button>
+<body class="bg-light page-task">
+  <nav class="navbar navbar-light bg-white mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a href="/index.php" class="navbar-brand">Otodo</a>
+      <div class="d-flex align-items-center gap-2">
+        <span id="offline-indicator" class="badge bg-danger-subtle text-danger hidden">Offline</span>
+        <span id="sync-indicator" class="badge bg-primary-subtle text-primary hidden">0 pending</span>
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary btn-sm" type="button" id="taskMenu" data-bs-toggle="dropdown" aria-expanded="false">&#x2026;</button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="taskMenu">
+            <li><button id="delete-task" type="button" class="dropdown-item text-danger">Delete</button></li>
+          </ul>
         </div>
-      </details>
-      <form id="edit-form" class="edit-form" autocomplete="off">
-        <label>
-          Title
-          <input id="edit-title" name="title" type="text" required />
-        </label>
-        <label>
-          Due date
-          <input id="edit-due" name="due" type="date" />
-        </label>
-        <label class="checkbox-field">
-          <input id="edit-completed" name="completed" type="checkbox" />
-          Completed
-        </label>
-      </form>
-      <p id="missing-task" class="empty hidden">Task not found.</p>
-    </section>
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#menu" aria-controls="menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="menu" aria-labelledby="menuLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="menuLabel">Menu</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <p class="mb-4">Hello, <?php echo $currentUser ? htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') : 'Offline session'; ?></p>
+      <div class="list-group">
+        <a href="/index.php" class="list-group-item list-group-item-action" <?php echo $taskFilter === 'active' ? 'aria-current="page"' : ''; ?>>Active Tasks</a>
+        <a href="/index.php?view=completed" class="list-group-item list-group-item-action" <?php echo $taskFilter === 'completed' ? 'aria-current="page"' : ''; ?>>Completed Tasks</a>
+        <button type="button" class="list-group-item list-group-item-action text-start" id="clear-cache-btn">Clear cache</button>
+        <form method="post" class="list-group-item list-group-item-action p-0" data-offline-logout="true">
+          <input type="hidden" name="action" value="logout">
+          <button type="submit" class="btn w-100 text-start">Logout</button>
+        </form>
+      </div>
+      <div class="mt-3 small text-muted" id="sync-status" aria-live="polite">All changes saved</div>
+    </div>
+  </div>
+
+  <div id="offline-banner" class="offline-banner hidden" role="status">Offline mode</div>
+
+  <div class="container">
+    <form id="edit-form" class="bg-white border rounded-3 p-4 shadow-sm" autocomplete="off">
+      <div class="mb-3">
+        <label class="form-label" for="edit-title">Title</label>
+        <input id="edit-title" name="title" type="text" class="form-control" required autocapitalize="none" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="edit-hashtags">Hashtags</label>
+        <input id="edit-hashtags" name="hashtags" type="text" class="form-control" placeholder="#work #personal" />
+        <div class="form-text">Type # in the title or description to add hashtags.</div>
+      </div>
+      <div class="mb-3 d-flex flex-wrap align-items-end gap-3">
+        <div>
+          <label class="form-label" for="edit-due">Due Date</label>
+          <input id="edit-due" name="due" type="date" class="form-control w-auto" />
+        </div>
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" name="completed" id="edit-completed" />
+          <label class="form-check-label" for="edit-completed">Completed</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="edit-priority">Priority</label>
+        <select id="edit-priority" name="priority" class="form-select w-auto">
+          <option value="none">None</option>
+          <option value="high">High</option>
+          <option value="med">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" name="star" id="edit-star" />
+        <label class="form-check-label" for="edit-star">Star this task</label>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="edit-description">Description</label>
+        <textarea id="edit-description" name="description" class="form-control" rows="4" spellcheck="false"></textarea>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <a href="/index.php" class="btn btn-secondary">Back</a>
+      </div>
+    </form>
+    <p id="missing-task" class="empty hidden">Task not found.</p>
   </div>
 
   <div id="toast" class="toast hidden"></div>
