@@ -38,6 +38,14 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function todayDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function compareTasks(a, b) {
   const aCompleted = isCompleted(a);
   const bCompleted = isCompleted(b);
@@ -229,7 +237,7 @@ async function handleAdd(event) {
     title,
     priority: 'low',
     start_date: null,
-    due_date: null,
+    due_date: todayDateString(),
     completed: 0,
     created_at: nowIso(),
     updated_at: nowIso(),
