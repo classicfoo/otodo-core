@@ -56,12 +56,25 @@ function compareTasks(a, b) {
   return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
 }
 
+function priorityLabel(value) {
+  const priority = (value || 'low').toLowerCase();
+  if (priority === 'high') return { key: 'high', label: 'High' };
+  if (priority === 'med' || priority === 'medium') return { key: 'med', label: 'Med' };
+  return { key: 'low', label: 'Low' };
+}
+
 function createRow(task) {
-  const row = document.createElement('tr');
+  const row = document.createElement('div');
   row.dataset.id = task.id;
+  row.className = 'task-row';
   row.innerHTML = `
-    <td class="task-title"><a class="task-link"></a></td>
-    <td class="due"></td>
+    <div class="task-main">
+      <a class="task-link"></a>
+      <div class="task-meta"></div>
+    </div>
+    <button class="star-btn" type="button" aria-label="Star task">
+      <span aria-hidden="true">☆</span>
+    </button>
   `;
   state.rows.set(task.id, row);
   return row;
@@ -81,12 +94,19 @@ function updateRow(task) {
   }
   taskLink.href = `${taskUrl.pathname}${taskUrl.search}`;
   const due = dueStatus(task.due_date);
-  const dueCell = row.querySelector('.due');
+  const meta = row.querySelector('.task-meta');
+  meta.innerHTML = '';
   if (due.label) {
-    dueCell.innerHTML = `<span class="due-label ${due.status}">${due.label}</span>`;
-  } else {
-    dueCell.textContent = '';
+    const dueBadge = document.createElement('span');
+    dueBadge.className = `due-label ${due.status}`.trim();
+    dueBadge.textContent = due.label;
+    meta.appendChild(dueBadge);
   }
+  const priority = priorityLabel(task.priority);
+  const priorityBadge = document.createElement('span');
+  priorityBadge.className = `priority-pill priority-${priority.key}`;
+  priorityBadge.textContent = priority.label;
+  meta.appendChild(priorityBadge);
   row.classList.toggle('completed', isCompleted(task));
   return row;
 }
@@ -195,10 +215,10 @@ async function init() {
   }
 
   taskBody.addEventListener('click', (event) => {
-    const row = event.target.closest('tr');
+    const row = event.target.closest('.task-row');
     if (!row) return;
     const id = row.dataset.id;
-    if (event.target.closest('a')) return;
+    if (event.target.closest('a') || event.target.closest('.star-btn')) return;
     const taskUrl = new URL('/task.php', window.location.origin);
     taskUrl.searchParams.set('id', id);
     if (listFilter === 'completed') {
