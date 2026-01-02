@@ -15,6 +15,31 @@ const offlineIndicator = document.getElementById('offline-indicator');
 const syncIndicator = document.getElementById('sync-indicator');
 const toast = document.getElementById('toast');
 
+const starStorageKey = 'otodo_starred_tasks';
+
+function loadStarState() {
+  try {
+    const raw = localStorage.getItem(starStorageKey);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  return {};
+}
+
+function saveStarState(next) {
+  try {
+    localStorage.setItem(starStorageKey, JSON.stringify(next));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+const starState = loadStarState();
+
 let task = null;
 let clientId = null;
 let ready = false;
@@ -75,7 +100,8 @@ function populateForm(loadedTask) {
     priorityInput.value = loadedTask.priority || 'low';
   }
   if (starInput) {
-    starInput.checked = loadedTask.star === 1;
+    const storedStar = starState[String(loadedTask.id)] || false;
+    starInput.checked = storedStar;
   }
   if (descriptionInput) {
     descriptionInput.value = loadedTask.description || '';
@@ -102,7 +128,6 @@ function hasTaskChanges(updated) {
   if ((updated.due_date || null) !== (task.due_date || null)) return true;
   if (updated.completed !== task.completed) return true;
   if (priorityInput && updated.priority !== task.priority) return true;
-  if (starInput && updated.star !== task.star) return true;
   if (descriptionInput && updated.description !== task.description) return true;
   if (hashtagsInput && updated.hashtags !== task.hashtags) return true;
   return false;
@@ -121,9 +146,6 @@ function buildUpdatedTask() {
   };
   if (priorityInput) {
     updated.priority = priorityInput.value || task.priority || 'low';
-  }
-  if (starInput) {
-    updated.star = starInput.checked ? 1 : 0;
   }
   if (descriptionInput) {
     updated.description = descriptionInput.value || '';
@@ -202,7 +224,13 @@ async function init() {
   registerAutosaveInput(dueInput, ['input', 'change']);
   registerAutosaveInput(completedInput, ['change']);
   registerAutosaveInput(priorityInput, ['change']);
-  registerAutosaveInput(starInput, ['change']);
+  if (starInput) {
+    starInput.addEventListener('change', () => {
+      if (!task) return;
+      starState[String(task.id)] = starInput.checked;
+      saveStarState(starState);
+    });
+  }
   registerAutosaveInput(descriptionInput, ['input']);
   registerAutosaveInput(hashtagsInput, ['input']);
 
