@@ -157,6 +157,20 @@ function hasTaskChanges(updated) {
   return false;
 }
 
+function hasNonDescriptionChanges(updated) {
+  if (!task) return false;
+  if (updated.title !== task.title) return true;
+  if ((updated.due_date || null) !== (task.due_date || null)) return true;
+  if (updated.completed !== task.completed) return true;
+  if ((updated.starred || 0) !== (task.starred || 0)) return true;
+  if (priorityInput && updated.priority !== task.priority) return true;
+  return false;
+}
+
+function buildOutboxKey(id, type) {
+  return `${type}:${id}`;
+}
+
 function buildUpdatedTask() {
   if (!task) return;
   const title = titleInput.value.trim();
@@ -184,13 +198,25 @@ async function persistTaskChanges({ showToastOnSave = false, triggerSyncOnSave =
   if (!task) return false;
   const updated = buildUpdatedTask();
   if (!updated || !hasTaskChanges(updated)) return false;
+  const descriptionChanged = descriptionInput && updated.description !== task.description;
+  const nonDescriptionChanged = hasNonDescriptionChanges(updated);
   await putTask(updated);
-  await addOutboxOp({
-    op_id: crypto.randomUUID(),
-    client_id: clientId,
-    type: 'upsert',
-    task: updated,
-  });
+  if (descriptionChanged) {
+    await addOutboxOp({
+      op_id: buildOutboxKey(updated.id, 'description'),
+      client_id: clientId,
+      type: 'upsert',
+      task: updated,
+    });
+  }
+  if (!descriptionChanged && nonDescriptionChanged) {
+    await addOutboxOp({
+      op_id: crypto.randomUUID(),
+      client_id: clientId,
+      type: 'upsert',
+      task: updated,
+    });
+  }
   window.dispatchEvent(new CustomEvent(taskUpdatedEvent, { detail: { task: updated } }));
   task = updated;
   if (showToastOnSave) {
