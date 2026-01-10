@@ -43,6 +43,10 @@ function iso_now(): string {
     return gmdate('c');
 }
 
+function today_date(): string {
+    return date('Y-m-d');
+}
+
 function valid_priority(string $priority): bool {
     return in_array($priority, ['low', 'med', 'high'], true);
 }
@@ -140,6 +144,9 @@ if ($action === 'upsert') {
     $existing->bindValue(':id', $id, SQLITE3_TEXT);
     $existingResult = $existing->execute();
     $row = $existingResult->fetchArray(SQLITE3_ASSOC);
+    if (!$row && ($dueDate === null || $dueDate === '')) {
+        $dueDate = today_date();
+    }
     $createdAt = $row['created_at'] ?? iso_now();
     $updatedAt = iso_now();
 
@@ -244,6 +251,9 @@ if ($action === 'sync_outbox') {
                 // Existing is newer, skip.
             } else {
                 $createdAt = $row['created_at'] ?? ($task['created_at'] ?? iso_now());
+                if (!$row && ($dueDate === null || $dueDate === '')) {
+                    $dueDate = today_date();
+                }
                 $stmt = $db->prepare('INSERT INTO tasks (id, title, priority, start_date, due_date, completed, created_at, updated_at)
                     VALUES (:id, :title, :priority, :start_date, :due_date, :completed, :created_at, :updated_at)
                     ON CONFLICT(id) DO UPDATE SET
