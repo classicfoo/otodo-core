@@ -30,14 +30,6 @@ function loadStarState() {
   return {};
 }
 
-function saveStarState(next) {
-  try {
-    localStorage.setItem(starStorageKey, JSON.stringify(next));
-  } catch (error) {
-    console.error(error);
-  }
-}
-
 const starState = loadStarState();
 
 let task = null;
@@ -92,6 +84,33 @@ function showMissingTask() {
   missingTask.classList.remove('hidden');
 }
 
+async function migrateStarStateForTask(loadedTask) {
+  if (!loadedTask) return loadedTask;
+  const id = String(loadedTask.id);
+  if (!Object.prototype.hasOwnProperty.call(starState, id)) return loadedTask;
+  if (loadedTask.starred !== undefined && loadedTask.starred !== null) return loadedTask;
+  const updated = {
+    ...loadedTask,
+    starred: starState[id] ? 1 : 0,
+    updated_at: nowIso(),
+  };
+  await putTask(updated);
+  await addOutboxOp({
+    op_id: crypto.randomUUID(),
+    client_id: clientId,
+    type: 'upsert',
+    task: updated,
+  });
+  try {
+    const next = { ...starState };
+    delete next[id];
+    localStorage.setItem(starStorageKey, JSON.stringify(next));
+  } catch (error) {
+    console.error(error);
+  }
+  return updated;
+}
+
 function populateForm(loadedTask) {
   titleInput.value = loadedTask.title;
   dueInput.value = loadedTask.due_date || '';
@@ -100,8 +119,7 @@ function populateForm(loadedTask) {
     priorityInput.value = loadedTask.priority || 'low';
   }
   if (starInput) {
-    const storedStar = starState[String(loadedTask.id)] || false;
-    starInput.checked = storedStar;
+    starInput.checked = Boolean(loadedTask.starred);
   }
   if (descriptionInput) {
     descriptionInput.value = loadedTask.description || '';
@@ -117,6 +135,7 @@ async function loadTask(id) {
     showMissingTask();
     return;
   }
+  task = await migrateStarStateForTask(task);
   ready = false;
   populateForm(task);
   ready = true;
@@ -127,6 +146,7 @@ function hasTaskChanges(updated) {
   if (updated.title !== task.title) return true;
   if ((updated.due_date || null) !== (task.due_date || null)) return true;
   if (updated.completed !== task.completed) return true;
+  if ((updated.starred || 0) !== (task.starred || 0)) return true;
   if (priorityInput && updated.priority !== task.priority) return true;
   if (descriptionInput && updated.description !== task.description) return true;
   if (hashtagsInput && updated.hashtags !== task.hashtags) return true;
@@ -144,6 +164,9 @@ function buildUpdatedTask() {
     completed: completedInput.checked ? 1 : 0,
     updated_at: nowIso(),
   };
+  if (starInput) {
+    updated.starred = starInput.checked ? 1 : 0;
+  }
   if (priorityInput) {
     updated.priority = priorityInput.value || task.priority || 'low';
   }
@@ -224,13 +247,7 @@ async function init() {
   registerAutosaveInput(dueInput, ['input', 'change']);
   registerAutosaveInput(completedInput, ['change']);
   registerAutosaveInput(priorityInput, ['change']);
-  if (starInput) {
-    starInput.addEventListener('change', () => {
-      if (!task) return;
-      starState[String(task.id)] = starInput.checked;
-      saveStarState(starState);
-    });
-  }
+  registerAutosaveInput(starInput, ['change']);
   registerAutosaveInput(descriptionInput, ['input']);
   registerAutosaveInput(hashtagsInput, ['input']);
 

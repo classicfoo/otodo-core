@@ -104,14 +104,6 @@ function loadStarState() {
   return {};
 }
 
-function saveStarState(next) {
-  try {
-    localStorage.setItem(starStorageKey, JSON.stringify(next));
-  } catch (error) {
-    console.error(error);
-  }
-}
-
 const starState = loadStarState();
 
 function setStarAppearance(button, starred) {
@@ -121,6 +113,62 @@ function setStarAppearance(button, starred) {
   button.setAttribute('aria-label', starred ? 'Unstar task' : 'Star task');
   const icon = button.querySelector('.star-icon');
   if (icon) icon.textContent = starred ? '★' : '☆';
+}
+
+async function toggleStar(taskId, button) {
+  const task = state.tasks.get(taskId);
+  if (!task) return;
+  const next = !Boolean(task.starred);
+  const updated = {
+    ...task,
+    starred: next ? 1 : 0,
+    updated_at: nowIso(),
+  };
+  state.tasks.set(taskId, updated);
+  setStarAppearance(button, next);
+  try {
+    await putTask(updated);
+    await addOutboxOp({
+      op_id: crypto.randomUUID(),
+      client_id: state.clientId,
+      type: 'upsert',
+      task: updated,
+    });
+    triggerSync();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function migrateStarStateFromStorage() {
+  if (!starState || Object.keys(starState).length === 0) return;
+  let migrated = false;
+  for (const task of state.tasks.values()) {
+    const id = String(task.id);
+    if (!Object.prototype.hasOwnProperty.call(starState, id)) continue;
+    if (task.starred !== undefined && task.starred !== null) continue;
+    const updated = {
+      ...task,
+      starred: starState[id] ? 1 : 0,
+      updated_at: nowIso(),
+    };
+    state.tasks.set(task.id, updated);
+    await putTask(updated);
+    await addOutboxOp({
+      op_id: crypto.randomUUID(),
+      client_id: state.clientId,
+      type: 'upsert',
+      task: updated,
+    });
+    migrated = true;
+  }
+  if (migrated) {
+    try {
+      localStorage.removeItem(starStorageKey);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
 
 function createRow(task) {
@@ -145,12 +193,7 @@ function createRow(task) {
     starButton.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const current = starButton.getAttribute('aria-pressed') === 'true';
-      const next = !current;
-      const id = String(task.id);
-      starState[id] = next;
-      saveStarState(starState);
-      setStarAppearance(starButton, next);
+      void toggleStar(task.id, starButton);
     });
   }
   state.rows.set(task.id, row);
@@ -193,8 +236,7 @@ function updateRow(task) {
   }
   const starButton = row.querySelector('.star-toggle');
   if (starButton) {
-    const storedStar = starState[String(task.id)] || false;
-    setStarAppearance(starButton, storedStar);
+    setStarAppearance(starButton, Boolean(task.starred));
   }
   row.classList.toggle('completed', isCompleted(task));
   return row;
@@ -239,6 +281,7 @@ async function handleAdd(event) {
     start_date: null,
     due_date: todayDateString(),
     completed: 0,
+    starred: 0,
     created_at: nowIso(),
     updated_at: nowIso(),
   };
@@ -273,6 +316,7 @@ async function init() {
   state.clientId = await ensureClientId();
   const tasks = await getAllTasks();
   tasks.forEach((task) => state.tasks.set(task.id, task));
+  await migrateStarStateFromStorage();
   refreshList();
   if (navigator.onLine) {
     triggerSync();
