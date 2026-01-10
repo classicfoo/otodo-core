@@ -13,6 +13,8 @@ const searchToggle = document.getElementById('task-search-toggle');
 const searchInput = document.getElementById('task-search-input');
 const searchClear = document.getElementById('task-search-clear');
 
+const offcanvasNavLinks = document.querySelectorAll('[data-offcanvas-link]');
+
 const state = {
   tasks: new Map(),
   rows: new Map(),
@@ -23,6 +25,21 @@ const state = {
 const listFilter = new URLSearchParams(window.location.search).get('view') === 'completed'
   ? 'completed'
   : 'active';
+
+offcanvasNavLinks.forEach((link) => {
+  link.addEventListener('click', (event) => {
+    const href = link.getAttribute('href');
+    const offcanvas = link.closest('.offcanvas');
+    const offcanvasApi = window.bootstrap?.Offcanvas;
+    if (!href || !offcanvas || !offcanvasApi) {
+      return;
+    }
+    event.preventDefault();
+    const instance = offcanvasApi.getOrCreateInstance(offcanvas);
+    instance.hide();
+    window.location.href = href;
+  });
+});
 
 function isCompleted(task) {
   return Number(task.completed) === 1;
