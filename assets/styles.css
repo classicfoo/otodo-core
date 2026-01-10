@@ -238,11 +238,17 @@ body {
 #add-form select,
 #add-form button,
 .edit-form input,
+.edit-form textarea,
 .edit-form button {
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
   font-size: 14px;
+}
+
+.edit-form textarea {
+  min-height: 120px;
+  resize: vertical;
 }
 
 #add-form label,

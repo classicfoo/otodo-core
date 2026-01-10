@@ -47,6 +47,10 @@ $taskFilter = ($_GET['view'] ?? 'all') === 'completed' ? 'completed' : 'all';
           <input id="edit-title" name="title" type="text" required />
         </label>
         <label>
+          Description
+          <textarea id="edit-description" name="description" rows="4"></textarea>
+        </label>
+        <label>
           Due date
           <input id="edit-due" name="due" type="date" />
         </label>
