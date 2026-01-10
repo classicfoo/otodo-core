@@ -7,6 +7,7 @@ const listView = document.getElementById('list-view');
 const taskView = document.getElementById('task-view');
 const menuActive = document.getElementById('menu-view-active');
 const menuCompleted = document.getElementById('menu-view-completed');
+const beforeNavigateHooks = new Set();
 
 function isLocalNavigation(url) {
   return url.origin === window.location.origin
@@ -74,7 +75,24 @@ function applyRoute(controller, url) {
   }
 }
 
-function navigate(controller, nextUrl, { replace = false } = {}) {
+function registerBeforeNavigate(hook) {
+  if (typeof hook === 'function') {
+    beforeNavigateHooks.add(hook);
+  }
+}
+
+async function runBeforeNavigate() {
+  for (const hook of beforeNavigateHooks) {
+    try {
+      await hook();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+async function navigate(controller, nextUrl, { replace = false } = {}) {
+  await runBeforeNavigate();
   const url = nextUrl instanceof URL ? nextUrl : new URL(nextUrl, window.location.origin);
   if (replace) {
     window.history.replaceState({}, '', url);
@@ -95,11 +113,19 @@ function interceptNavigation(controller) {
     const url = new URL(link.href, window.location.origin);
     if (!isLocalNavigation(url)) return;
     event.preventDefault();
-    navigate(controller, url);
+    navigate(controller, url).catch((error) => {
+      console.error(error);
+    });
   });
 
   window.addEventListener('popstate', () => {
-    applyRoute(controller, new URL(window.location.href));
+    runBeforeNavigate()
+      .then(() => {
+        applyRoute(controller, new URL(window.location.href));
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   });
 }
 
@@ -108,7 +134,10 @@ async function init() {
   initSearch();
   let controller = null;
   controller = await initTaskView({
-    onNavigateToList: () => navigate(controller, '/index.php'),
+    onNavigateToList: () => navigate(controller, '/index.php').catch((error) => {
+      console.error(error);
+    }),
+    onBeforeNavigate: registerBeforeNavigate,
   });
   interceptNavigation(controller);
   applyRoute(controller, new URL(window.location.href));
