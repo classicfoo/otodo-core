@@ -58,8 +58,8 @@ $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'activ
     <div class="offcanvas-body">
       <p class="mb-4">Hello, <?php echo $currentUser ? htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') : 'Offline session'; ?></p>
       <div class="list-group">
-        <a href="/index.php" class="list-group-item list-group-item-action" data-bs-dismiss="offcanvas" <?php echo $taskFilter === 'active' ? 'aria-current="page"' : ''; ?>>Active Tasks</a>
-        <a href="/index.php?view=completed" class="list-group-item list-group-item-action" data-bs-dismiss="offcanvas" <?php echo $taskFilter === 'completed' ? 'aria-current="page"' : ''; ?>>Completed Tasks</a>
+        <a href="/index.php" class="list-group-item list-group-item-action" data-offcanvas-link <?php echo $taskFilter === 'active' ? 'aria-current="page"' : ''; ?>>Active Tasks</a>
+        <a href="/index.php?view=completed" class="list-group-item list-group-item-action" data-offcanvas-link <?php echo $taskFilter === 'completed' ? 'aria-current="page"' : ''; ?>>Completed Tasks</a>
         <button type="button" class="list-group-item list-group-item-action text-start" id="clear-cache-btn">Clear cache</button>
         <form method="post" class="list-group-item list-group-item-action p-0" data-offline-logout="true">
           <input type="hidden" name="action" value="logout">
