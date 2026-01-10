@@ -374,7 +374,7 @@ body {
 }
 
 .task-title {
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .task-link {
@@ -388,7 +388,8 @@ body {
   text-decoration: underline;
 }
 
-.completed .task-link {
+.completed .task-link,
+.completed .task-title {
   color: var(--muted);
   text-decoration: line-through;
 }
@@ -668,7 +669,7 @@ body {
 }
 
 .page-index .task-title {
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .page-index .task-meta {
