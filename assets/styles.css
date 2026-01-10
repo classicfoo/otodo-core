@@ -374,7 +374,7 @@ body {
 }
 
 .task-title {
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .task-link {
@@ -388,7 +388,8 @@ body {
   text-decoration: underline;
 }
 
-.completed .task-link {
+.completed .task-link,
+.completed .task-title {
   color: var(--muted);
   text-decoration: line-through;
 }
@@ -539,6 +540,11 @@ body {
   box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
 }
 
+.page-task .task-container {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
 .page-index .controls {
   background: transparent;
   border-radius: 0;
@@ -668,7 +674,7 @@ body {
 }
 
 .page-index .task-title {
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .page-index .task-meta {
