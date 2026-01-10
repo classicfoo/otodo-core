@@ -20,9 +20,16 @@ const state = {
   searchQuery: '',
 };
 
-const listFilter = new URLSearchParams(window.location.search).get('view') === 'completed'
-  ? 'completed'
-  : 'active';
+let listFilter = 'active';
+
+export function setListFilter(nextFilter) {
+  listFilter = nextFilter === 'completed' ? 'completed' : 'active';
+  refreshList();
+}
+
+export function getListFilter() {
+  return listFilter;
+}
 
 function isCompleted(task) {
   return Number(task.completed) === 1;
@@ -312,7 +319,7 @@ function triggerSync() {
     });
 }
 
-async function init() {
+export async function initListView() {
   state.clientId = await ensureClientId();
   const tasks = await getAllTasks();
   tasks.forEach((task) => state.tasks.set(task.id, task));
@@ -453,8 +460,6 @@ function bindSearch() {
   });
 }
 
-init().catch((error) => {
-  console.error(error);
-});
-
-bindSearch();
+export function initSearch() {
+  bindSearch();
+}

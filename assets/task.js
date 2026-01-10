@@ -35,6 +35,7 @@ let task = null;
 let clientId = null;
 let ready = false;
 let autosaveTimeout = null;
+let navigateToList = null;
 
 function showToast(message) {
   toast.textContent = message;
@@ -83,6 +84,11 @@ function showMissingTask() {
   missingTask.classList.remove('hidden');
 }
 
+function showTaskForm() {
+  form.classList.remove('hidden');
+  missingTask.classList.add('hidden');
+}
+
 async function migrateStarStateForTask(loadedTask) {
   if (!loadedTask) return loadedTask;
   const id = String(loadedTask.id);
@@ -126,6 +132,7 @@ function populateForm(loadedTask) {
 }
 
 async function loadTask(id) {
+  showTaskForm();
   task = await getTask(id);
   if (!task) {
     showMissingTask();
@@ -217,20 +224,20 @@ async function handleDelete() {
     id: task.id,
   });
   triggerSync();
-  window.location.href = '/index.php';
+  if (navigateToList) {
+    navigateToList();
+  } else {
+    window.location.href = '/index.php';
+  }
 }
 
-async function init() {
+export async function initTaskView(options = {}) {
   clientId = await ensureClientId();
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-  if (!id) {
-    showMissingTask();
-    return;
-  }
-  await loadTask(id);
   await updateSyncIndicator();
   updateOfflineIndicator();
+  navigateToList = typeof options.onNavigateToList === 'function'
+    ? options.onNavigateToList
+    : null;
 
   form.addEventListener('submit', (event) => event.preventDefault());
   deleteButton.addEventListener('click', handleDelete);
@@ -244,6 +251,18 @@ async function init() {
 
   window.addEventListener('online', updateOfflineIndicator);
   window.addEventListener('offline', updateOfflineIndicator);
+
+  return {
+    async loadTaskById(id) {
+      if (!id) {
+        showMissingTask();
+        return;
+      }
+      await loadTask(id);
+    },
+  };
 }
 
-init();
+export function showMissingTaskView() {
+  showMissingTask();
+}

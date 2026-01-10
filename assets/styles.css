@@ -24,6 +24,17 @@ body {
   color: var(--text);
 }
 
+body.route-list #task-view,
+body.route-list #task-navbar {
+  display: none;
+}
+
+body.route-task #list-view,
+body.route-task #list-navbar,
+body.route-task #menu {
+  display: none;
+}
+
 .app {
   max-width: var(--content-max-width);
   margin: 32px auto 80px;
