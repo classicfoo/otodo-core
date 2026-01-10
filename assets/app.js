@@ -13,6 +13,9 @@ const searchToggle = document.getElementById('task-search-toggle');
 const searchInput = document.getElementById('task-search-input');
 const searchClear = document.getElementById('task-search-clear');
 
+const taskUpdatedEvent = 'otodo-task-updated';
+const taskDeletedEvent = 'otodo-task-deleted';
+
 const state = {
   tasks: new Map(),
   rows: new Map(),
@@ -267,6 +270,25 @@ function refreshList() {
   applySearchFilter(state.searchQuery);
 }
 
+function handleTaskUpdated(event) {
+  const updated = event?.detail?.task;
+  if (!updated || !updated.id) return;
+  state.tasks.set(updated.id, updated);
+  refreshList();
+}
+
+function handleTaskDeleted(event) {
+  const id = event?.detail?.id;
+  if (!id) return;
+  state.tasks.delete(id);
+  const row = state.rows.get(id);
+  if (row) {
+    row.remove();
+    state.rows.delete(id);
+  }
+  refreshList();
+}
+
 async function addOutboxOp(op) {
   await addOutbox(op);
 }
@@ -362,6 +384,8 @@ export async function initListView() {
   });
 
   window.addEventListener('online', triggerSync);
+  window.addEventListener(taskUpdatedEvent, handleTaskUpdated);
+  window.addEventListener(taskDeletedEvent, handleTaskDeleted);
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
