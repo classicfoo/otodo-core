@@ -8,7 +8,6 @@ const completedInput = document.getElementById('edit-completed');
 const priorityInput = document.getElementById('edit-priority');
 const starInput = document.getElementById('edit-star');
 const descriptionInput = document.getElementById('edit-description');
-const hashtagsInput = document.getElementById('edit-hashtags');
 const deleteButton = document.getElementById('delete-task');
 const missingTask = document.getElementById('missing-task');
 const offlineIndicator = document.getElementById('offline-indicator');
@@ -124,9 +123,6 @@ function populateForm(loadedTask) {
   if (descriptionInput) {
     descriptionInput.value = loadedTask.description || '';
   }
-  if (hashtagsInput) {
-    hashtagsInput.value = loadedTask.hashtags || '';
-  }
 }
 
 async function loadTask(id) {
@@ -149,7 +145,6 @@ function hasTaskChanges(updated) {
   if ((updated.starred || 0) !== (task.starred || 0)) return true;
   if (priorityInput && updated.priority !== task.priority) return true;
   if (descriptionInput && updated.description !== task.description) return true;
-  if (hashtagsInput && updated.hashtags !== task.hashtags) return true;
   return false;
 }
 
@@ -172,9 +167,6 @@ function buildUpdatedTask() {
   }
   if (descriptionInput) {
     updated.description = descriptionInput.value || '';
-  }
-  if (hashtagsInput) {
-    updated.hashtags = hashtagsInput.value || '';
   }
   return updated;
 }
@@ -249,7 +241,6 @@ async function init() {
   registerAutosaveInput(priorityInput, ['change']);
   registerAutosaveInput(starInput, ['change']);
   registerAutosaveInput(descriptionInput, ['input']);
-  registerAutosaveInput(hashtagsInput, ['input']);
 
   window.addEventListener('online', updateOfflineIndicator);
   window.addEventListener('offline', updateOfflineIndicator);
