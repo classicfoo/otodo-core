@@ -15,6 +15,8 @@ const syncIndicator = document.getElementById('sync-indicator');
 const toast = document.getElementById('toast');
 
 const starStorageKey = 'otodo_starred_tasks';
+const taskUpdatedEvent = 'otodo-task-updated';
+const taskDeletedEvent = 'otodo-task-deleted';
 
 function loadStarState() {
   try {
@@ -189,6 +191,7 @@ async function performAutosave() {
     type: 'upsert',
     task: updated,
   });
+  window.dispatchEvent(new CustomEvent(taskUpdatedEvent, { detail: { task: updated } }));
   task = updated;
   showToast('Saved');
   triggerSync();
@@ -223,6 +226,7 @@ async function handleDelete() {
     type: 'delete',
     id: task.id,
   });
+  window.dispatchEvent(new CustomEvent(taskDeletedEvent, { detail: { id: task.id } }));
   triggerSync();
   if (navigateToList) {
     navigateToList();
