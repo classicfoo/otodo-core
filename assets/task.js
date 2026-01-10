@@ -1,5 +1,6 @@
-import { getTask, putTask, deleteTask, addOutbox, getOutbox } from './db_local.js';
+import { getTask, putTask, deleteTask, addOutbox } from './db_local.js';
 import { ensureClientId, syncAll } from './sync.js';
+import { updateSyncIndicator } from './sync_indicator.js';
 
 const form = document.getElementById('edit-form');
 const titleInput = document.getElementById('edit-title');
@@ -11,7 +12,6 @@ const descriptionInput = document.getElementById('edit-description');
 const deleteButton = document.getElementById('delete-task');
 const missingTask = document.getElementById('missing-task');
 const offlineIndicator = document.getElementById('offline-indicator');
-const syncIndicator = document.getElementById('sync-indicator');
 const toast = document.getElementById('toast');
 
 const starStorageKey = 'otodo_starred_tasks';
@@ -47,16 +47,6 @@ function showToast(message) {
 
 function nowIso() {
   return new Date().toISOString();
-}
-
-async function updateSyncIndicator() {
-  const outbox = await getOutbox();
-  if (outbox.length) {
-    syncIndicator.textContent = `${outbox.length} pending`;
-    syncIndicator.classList.remove('hidden');
-  } else {
-    syncIndicator.classList.add('hidden');
-  }
 }
 
 async function addOutboxOp(op) {

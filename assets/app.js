@@ -1,6 +1,7 @@
 import { getAllTasks, putTask, addOutbox } from './db_local.js';
 import { dueStatus } from './dates.js';
 import { syncAll, ensureClientId } from './sync.js';
+import { updateSyncIndicator } from './sync_indicator.js';
 
 const taskBody = document.getElementById('task-body');
 const emptyState = document.getElementById('empty-state');
@@ -291,6 +292,7 @@ function handleTaskDeleted(event) {
 
 async function addOutboxOp(op) {
   await addOutbox(op);
+  await updateSyncIndicator();
 }
 
 async function saveTask(task) {
@@ -333,6 +335,9 @@ function triggerSync() {
       state.tasks.clear();
       tasks.forEach((task) => state.tasks.set(task.id, task));
       refreshList();
+      return updateSyncIndicator();
+    })
+    .then(() => {
       showToast('Synced');
     })
     .catch((error) => {
@@ -346,6 +351,7 @@ export async function initListView() {
   const tasks = await getAllTasks();
   tasks.forEach((task) => state.tasks.set(task.id, task));
   await migrateStarStateFromStorage();
+  await updateSyncIndicator();
   refreshList();
   if (navigator.onLine) {
     triggerSync();
