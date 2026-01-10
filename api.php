@@ -44,7 +44,7 @@ function iso_now(): string {
 }
 
 function valid_priority(string $priority): bool {
-    return in_array($priority, ['low', 'med', 'high'], true);
+    return in_array($priority, ['none', 'low', 'med', 'high'], true);
 }
 
 function valid_date(?string $value): bool {
