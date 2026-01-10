@@ -180,10 +180,10 @@ function buildUpdatedTask() {
   return updated;
 }
 
-async function performAutosave() {
-  if (!task) return;
+async function persistTaskChanges({ showToastOnSave = false, triggerSyncOnSave = false } = {}) {
+  if (!task) return false;
   const updated = buildUpdatedTask();
-  if (!updated || !hasTaskChanges(updated)) return;
+  if (!updated || !hasTaskChanges(updated)) return false;
   await putTask(updated);
   await addOutboxOp({
     op_id: crypto.randomUUID(),
@@ -193,15 +193,35 @@ async function performAutosave() {
   });
   window.dispatchEvent(new CustomEvent(taskUpdatedEvent, { detail: { task: updated } }));
   task = updated;
-  showToast('Saved');
-  triggerSync();
+  if (showToastOnSave) {
+    showToast('Saved');
+  }
+  if (triggerSyncOnSave) {
+    triggerSync();
+  }
+  return true;
+}
+
+function clearAutosaveTimeout() {
+  if (autosaveTimeout) {
+    clearTimeout(autosaveTimeout);
+    autosaveTimeout = null;
+  }
+}
+
+async function flushPendingTaskChanges() {
+  clearAutosaveTimeout();
+  if (!ready) return false;
+  return persistTaskChanges();
+}
+
+async function performAutosave() {
+  await persistTaskChanges({ showToastOnSave: true, triggerSyncOnSave: true });
 }
 
 function scheduleAutosave() {
   if (!ready) return;
-  if (autosaveTimeout) {
-    clearTimeout(autosaveTimeout);
-  }
+  clearAutosaveTimeout();
   autosaveTimeout = setTimeout(() => {
     performAutosave().catch((error) => {
       console.error(error);
@@ -242,6 +262,14 @@ export async function initTaskView(options = {}) {
   navigateToList = typeof options.onNavigateToList === 'function'
     ? options.onNavigateToList
     : null;
+  const registerBeforeNavigate = typeof options.onBeforeNavigate === 'function'
+    ? options.onBeforeNavigate
+    : null;
+  if (registerBeforeNavigate) {
+    registerBeforeNavigate(() => flushPendingTaskChanges().catch((error) => {
+      console.error(error);
+    }));
+  }
 
   form.addEventListener('submit', (event) => event.preventDefault());
   deleteButton.addEventListener('click', handleDelete);
@@ -255,6 +283,16 @@ export async function initTaskView(options = {}) {
 
   window.addEventListener('online', updateOfflineIndicator);
   window.addEventListener('offline', updateOfflineIndicator);
+  window.addEventListener('beforeunload', () => {
+    flushPendingTaskChanges().catch((error) => {
+      console.error(error);
+    });
+  });
+  window.addEventListener('pagehide', () => {
+    flushPendingTaskChanges().catch((error) => {
+      console.error(error);
+    });
+  });
 
   return {
     async loadTaskById(id) {
