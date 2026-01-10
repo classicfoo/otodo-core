@@ -388,7 +388,8 @@ body {
   text-decoration: underline;
 }
 
-.completed .task-link {
+.completed .task-link,
+.completed .task-title {
   color: var(--muted);
   text-decoration: line-through;
 }
