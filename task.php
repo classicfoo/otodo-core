@@ -76,11 +76,6 @@ $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'activ
         <label class="form-label" for="edit-title">Title</label>
         <input id="edit-title" name="title" type="text" class="form-control" required autocapitalize="none" />
       </div>
-      <div class="mb-3">
-        <label class="form-label" for="edit-hashtags">Hashtags</label>
-        <input id="edit-hashtags" name="hashtags" type="text" class="form-control" placeholder="#work #personal" />
-        <div class="form-text">Type # in the title or description to add hashtags.</div>
-      </div>
       <div class="mb-3 d-flex flex-wrap align-items-end gap-3">
         <div>
           <label class="form-label" for="edit-due">Due Date</label>
