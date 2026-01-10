@@ -47,8 +47,8 @@ $taskFilter = ($_GET['view'] ?? 'active') === 'completed' ? 'completed' : 'activ
 
   <div id="offline-banner" class="offline-banner hidden" role="status">Offline mode</div>
 
-  <div class="container">
-    <form id="edit-form" class="bg-white border rounded-3 p-4 shadow-sm" autocomplete="off">
+  <div class="container task-container">
+    <form id="edit-form" class="bg-light border-0 rounded-3 p-3 shadow-none" autocomplete="off">
       <div class="mb-3">
         <label class="form-label" for="edit-title">Title</label>
         <input id="edit-title" name="title" type="text" class="form-control" required autocapitalize="none" />
