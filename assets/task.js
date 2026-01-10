@@ -203,7 +203,7 @@ async function persistTaskChanges({ showToastOnSave = false, triggerSyncOnSave =
   await putTask(updated);
   if (descriptionChanged) {
     await addOutboxOp({
-      op_id: buildOutboxKey(updated.id, 'description'),
+      op_id: `${buildOutboxKey(updated.id, 'description')}:${updated.updated_at}`,
       client_id: clientId,
       type: 'upsert',
       task: updated,
