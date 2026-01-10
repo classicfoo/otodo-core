@@ -43,8 +43,8 @@ $isCompletedView = $taskFilter === 'completed';
         </span>
       </p>
       <div class="menu-card">
-        <a class="menu-item" href="/index.php" data-bs-dismiss="offcanvas" <?php echo $isCompletedView ? '' : 'aria-current="page"'; ?>>Active tasks</a>
-        <a class="menu-item" href="/index.php?view=completed" data-bs-dismiss="offcanvas" <?php echo $isCompletedView ? 'aria-current="page"' : ''; ?>>Completed tasks</a>
+        <a class="menu-item" href="/index.php" data-offcanvas-link <?php echo $isCompletedView ? '' : 'aria-current="page"'; ?>>Active tasks</a>
+        <a class="menu-item" href="/index.php?view=completed" data-offcanvas-link <?php echo $isCompletedView ? 'aria-current="page"' : ''; ?>>Completed tasks</a>
         <div class="menu-action">
           <button id="clear-cache-btn" type="button">Clear cache</button>
         </div>
