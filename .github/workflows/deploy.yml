@@ -3,7 +3,7 @@ name: Deploy to InfinityFree (FTP)
 on:
   push:
     branches:
-      - prod
+      - prod-spa
 
 jobs:
   deploy:
