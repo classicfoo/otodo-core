@@ -1,10 +1,12 @@
-const CACHE_NAME = 'otodo-shell-v4';
+const CACHE_NAME = 'otodo-shell-v5';
 const ASSETS = [
   '/',
   '/index.php',
   '/task.php',
   '/login.php',
   '/register.php',
+  '/assets/bootstrap.min.css',
+  '/assets/bootstrap.bundle.min.js',
   '/assets/styles.css',
   '/assets/app.js',
   '/assets/spa.js',
