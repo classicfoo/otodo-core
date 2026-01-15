@@ -899,6 +899,6 @@ body.route-task #menu {
   }
 
   .page-index .task-search.expanded {
-    width: min(280px, 70vw);
+    width: min(240px, 60vw);
   }
 }
