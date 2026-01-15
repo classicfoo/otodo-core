@@ -1,4 +1,4 @@
-const CACHE_NAME = 'otodo-shell-v3';
+const CACHE_NAME = 'otodo-shell-v4';
 const ASSETS = [
   '/',
   '/index.php',
@@ -73,13 +73,22 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
+      (async () => {
+        const isListRoute = url.pathname === '/' || url.pathname === '/index.php';
+        const cacheKey = isListRoute ? '/index.php' : request;
+        const cached = await caches.match(cacheKey);
+        const updatePromise = fetch(request).then((response) => {
           const cloned = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+          caches.open(CACHE_NAME).then((cache) => cache.put(cacheKey, cloned));
           return response;
-        })
-        .catch(() => {
+        });
+
+        if (cached) {
+          event.waitUntil(updatePromise.catch(() => {}));
+          return cached;
+        }
+
+        return updatePromise.catch(() => {
           if (url.pathname === '/login.php' || url.pathname === '/register.php') {
             return caches.match(url.pathname);
           }
@@ -87,7 +96,8 @@ self.addEventListener('fetch', (event) => {
             return caches.match('/task.php');
           }
           return caches.match('/index.php');
-        }),
+        });
+      })(),
     );
     return;
   }
