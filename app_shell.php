@@ -58,7 +58,12 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-      <p class="mb-4">Hello, <?php echo $currentUser ? htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') : 'Offline session'; ?></p>
+      <p class="mb-4">
+        Hello,
+        <span id="menu-user-email" <?php echo $currentUser ? 'data-server-email="' . htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') . '"' : ''; ?>>
+          <?php echo $currentUser ? htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') : 'Offline session'; ?>
+        </span>
+      </p>
       <div class="list-group">
         <a href="/index.php" id="menu-view-active" class="list-group-item list-group-item-action" <?php echo $taskFilter === 'active' ? 'aria-current="page"' : ''; ?>>Active Tasks</a>
         <a href="/index.php?view=completed" id="menu-view-completed" class="list-group-item list-group-item-action" <?php echo $taskFilter === 'completed' ? 'aria-current="page"' : ''; ?>>Completed Tasks</a>
