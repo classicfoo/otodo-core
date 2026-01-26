@@ -342,6 +342,7 @@ function triggerSync() {
     })
     .catch((error) => {
       console.error(error);
+      void updateSyncIndicator();
       showToast('Sync failed');
     });
 }
