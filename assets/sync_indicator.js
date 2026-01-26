@@ -5,9 +5,16 @@ export async function updateSyncIndicator() {
   if (!syncIndicator) return;
   const outbox = await getOutbox();
   if (outbox.length) {
-    syncIndicator.textContent = `${outbox.length} pending`;
+    const online = navigator.onLine;
+    syncIndicator.textContent = online
+      ? `Syncing ${outbox.length}…`
+      : `${outbox.length} pending`;
+    syncIndicator.title = online
+      ? 'Changes are syncing in the background'
+      : 'Changes will sync when you are back online';
     syncIndicator.classList.remove('hidden');
   } else {
     syncIndicator.classList.add('hidden');
+    syncIndicator.title = '';
   }
 }
