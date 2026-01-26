@@ -9,11 +9,43 @@ async function fetchJson(url, options = {}) {
     },
     ...options,
   });
-  const data = await response.json();
-  if (!data.ok) {
-    throw new Error(data.error || 'Request failed');
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = null;
+  }
+  if (response.status === 401) {
+    const unauthorizedError = new Error((data && data.error) || 'Unauthorized');
+    unauthorizedError.status = 401;
+    unauthorizedError.code = 'unauthorized';
+    throw unauthorizedError;
+  }
+  if (!response.ok) {
+    const httpError = new Error((data && data.error) || `Request failed (${response.status})`);
+    httpError.status = response.status;
+    throw httpError;
+  }
+  if (!data || !data.ok) {
+    const apiError = new Error((data && data.error) || 'Request failed');
+    apiError.status = response.status;
+    if (data && data.code) {
+      apiError.code = data.code;
+    }
+    throw apiError;
   }
   return data.data;
+}
+
+function serializeSyncError(error) {
+  if (!error || typeof error !== 'object') {
+    return { message: 'Sync failed', status: null, code: null };
+  }
+  return {
+    message: error.message || 'Sync failed',
+    status: Number.isFinite(error.status) ? error.status : null,
+    code: typeof error.code === 'string' ? error.code : null,
+  };
 }
 
 export async function ensureClientId() {
@@ -48,7 +80,13 @@ export async function flushOutbox() {
 }
 
 export async function syncAll() {
-  await flushOutbox();
-  const tasks = await fetchRemoteTasks();
-  return tasks;
+  try {
+    await flushOutbox();
+    const tasks = await fetchRemoteTasks();
+    await setMeta('last_sync_error', null);
+    return tasks;
+  } catch (error) {
+    await setMeta('last_sync_error', serializeSyncError(error));
+    throw error;
+  }
 }

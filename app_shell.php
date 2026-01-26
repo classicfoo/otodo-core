@@ -74,6 +74,7 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
         </form>
       </div>
       <div class="mt-3 small text-muted" id="sync-status" aria-live="polite">All changes saved</div>
+      <a href="/login.php" id="sync-login-cta" class="btn btn-sm btn-outline-primary mt-2 hidden">Sign in</a>
     </div>
   </div>
 

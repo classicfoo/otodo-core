@@ -67,6 +67,7 @@ function triggerSync() {
     .then(() => updateSyncIndicator())
     .catch((error) => {
       console.error(error);
+      void updateSyncIndicator();
       showToast('Sync failed');
     });
 }
