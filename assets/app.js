@@ -13,6 +13,7 @@ const searchContainer = document.getElementById('task-search');
 const searchToggle = document.getElementById('task-search-toggle');
 const searchInput = document.getElementById('task-search-input');
 const searchClear = document.getElementById('task-search-clear');
+const pageBody = document.body;
 
 const taskUpdatedEvent = 'otodo-task-updated';
 const taskDeletedEvent = 'otodo-task-deleted';
@@ -25,6 +26,83 @@ const state = {
 };
 
 let listFilter = 'active';
+let dueOverlay = null;
+let activeDueTaskId = null;
+
+function ensureDueOverlay() {
+  if (dueOverlay) return dueOverlay;
+  const overlay = document.createElement('div');
+  overlay.className = 'due-date-overlay hidden';
+  overlay.innerHTML = `
+    <div class="due-date-overlay-card shadow-sm">
+      <input type="date" class="due-date-overlay-input form-control form-control-sm" aria-label="Choose due date" />
+    </div>
+  `;
+  pageBody.appendChild(overlay);
+  const input = overlay.querySelector('.due-date-overlay-input');
+  dueOverlay = { overlay, input };
+
+  document.addEventListener('click', (event) => {
+    if (!dueOverlay || dueOverlay.overlay.classList.contains('hidden')) return;
+    if (dueOverlay.overlay.contains(event.target)) return;
+    closeDueOverlay();
+  });
+
+  window.addEventListener('scroll', closeDueOverlay, true);
+  window.addEventListener('resize', closeDueOverlay);
+
+  if (input) {
+    input.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+    input.addEventListener('change', (event) => {
+      event.stopPropagation();
+      void updateTaskDueDate(activeDueTaskId, event.target.value);
+      closeDueOverlay();
+    });
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeDueOverlay();
+      }
+    });
+  }
+
+  return dueOverlay;
+}
+
+function closeDueOverlay() {
+  if (!dueOverlay) return;
+  dueOverlay.overlay.classList.add('hidden');
+  dueOverlay.overlay.classList.remove('calendar-only');
+  activeDueTaskId = null;
+}
+
+function openDueOverlay(badge, taskId) {
+  if (!badge) return;
+  const overlay = ensureDueOverlay();
+  const task = taskId ? state.tasks.get(taskId) : null;
+  activeDueTaskId = taskId || null;
+  if (overlay.input) {
+    overlay.input.value = task?.due_date || '';
+  }
+  const rect = badge.getBoundingClientRect();
+  overlay.overlay.style.top = `${window.scrollY + rect.bottom + 3}px`;
+  overlay.overlay.style.left = `${window.scrollX + rect.left + rect.width / 2}px`;
+  overlay.overlay.style.transform = 'translateX(-50%)';
+  overlay.overlay.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    const input = overlay.input;
+    if (!input) return;
+    input.focus({ preventScroll: true });
+    if (typeof input.showPicker === 'function') {
+      overlay.overlay.classList.add('calendar-only');
+      input.showPicker();
+    } else {
+      overlay.overlay.classList.remove('calendar-only');
+    }
+  });
+}
 
 export function setListFilter(nextFilter) {
   listFilter = nextFilter === 'completed' ? 'completed' : 'active';
@@ -192,7 +270,7 @@ function createRow(task) {
       <div class="task-hashtags"></div>
     </div>
     <div class="task-meta">
-      <span class="due-date-badge"></span>
+      <span class="due-date-badge" role="button" tabindex="0" aria-label="Edit due date"></span>
       <span class="small priority-text"></span>
       <button type="button" class="task-star star-toggle" aria-pressed="false" aria-label="Star task">
         <span class="star-icon" aria-hidden="true">☆</span>
@@ -205,6 +283,21 @@ function createRow(task) {
       event.preventDefault();
       event.stopPropagation();
       void toggleStar(task.id, starButton);
+    });
+  }
+  const dueBadge = row.querySelector('.due-date-badge');
+  if (dueBadge) {
+    dueBadge.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openDueOverlay(dueBadge, row.dataset.id);
+    });
+    dueBadge.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.stopPropagation();
+        openDueOverlay(dueBadge, row.dataset.id);
+      }
     });
   }
   state.rows.set(task.id, row);
@@ -251,6 +344,34 @@ function updateRow(task) {
   }
   row.classList.toggle('completed', isCompleted(task));
   return row;
+}
+
+async function updateTaskDueDate(taskId, nextDate) {
+  if (!taskId) return;
+  const task = state.tasks.get(taskId);
+  if (!task) return;
+  const normalized = nextDate || null;
+  if ((task.due_date || null) === normalized) return;
+  const updated = {
+    ...task,
+    due_date: normalized,
+    updated_at: nowIso(),
+  };
+  state.tasks.set(task.id, updated);
+  refreshList();
+  try {
+    await putTask(updated);
+    await addOutboxOp({
+      op_id: crypto.randomUUID(),
+      client_id: state.clientId,
+      type: 'upsert',
+      task: updated,
+    });
+    triggerSync();
+  } catch (error) {
+    console.error(error);
+    showToast('Due date not saved');
+  }
 }
 
 function refreshList() {
