@@ -87,9 +87,9 @@ function openDueOverlay(badge, taskId) {
     overlay.input.value = task?.due_date || '';
   }
   const rect = badge.getBoundingClientRect();
-  overlay.overlay.style.top = `${window.scrollY + rect.bottom + 3}px`;
+  overlay.overlay.style.top = `${window.scrollY + rect.top + rect.height / 2}px`;
   overlay.overlay.style.left = `${window.scrollX + rect.left + rect.width / 2}px`;
-  overlay.overlay.style.transform = 'translateX(-50%)';
+  overlay.overlay.style.transform = 'translate(-50%, -50%)';
   overlay.overlay.classList.remove('hidden');
   requestAnimationFrame(() => {
     const input = overlay.input;
