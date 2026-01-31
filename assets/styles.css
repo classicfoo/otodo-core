@@ -698,6 +698,44 @@ body.route-task #menu {
   min-width: 80px;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.page-index .due-date-overlay {
+  position: absolute;
+  z-index: 1050;
+}
+
+.page-index .due-date-overlay.hidden {
+  display: none;
+}
+
+.page-index .due-date-overlay-card {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+
+.page-index .due-date-overlay-input {
+  min-width: 180px;
+}
+
+.page-index .due-date-overlay.calendar-only .due-date-overlay-card {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.page-index .due-date-overlay.calendar-only .due-date-overlay-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  padding: 0;
+  border: 0;
 }
 
 .page-index .priority-text {
