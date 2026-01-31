@@ -722,6 +722,22 @@ body.route-task #menu {
   min-width: 180px;
 }
 
+.page-index .due-date-overlay.calendar-only .due-date-overlay-card {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.page-index .due-date-overlay.calendar-only .due-date-overlay-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  padding: 0;
+  border: 0;
+}
+
 .page-index .priority-text {
   text-align: center;
   min-width: 70px;

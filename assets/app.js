@@ -74,6 +74,7 @@ function ensureDueOverlay() {
 function closeDueOverlay() {
   if (!dueOverlay) return;
   dueOverlay.overlay.classList.add('hidden');
+  dueOverlay.overlay.classList.remove('calendar-only');
   activeDueTaskId = null;
 }
 
@@ -90,9 +91,14 @@ function openDueOverlay(badge, taskId) {
   overlay.overlay.style.left = `${window.scrollX + rect.left}px`;
   overlay.overlay.classList.remove('hidden');
   requestAnimationFrame(() => {
-    overlay.input?.focus({ preventScroll: true });
-    if (typeof overlay.input?.showPicker === 'function') {
-      overlay.input.showPicker();
+    const input = overlay.input;
+    if (!input) return;
+    input.focus({ preventScroll: true });
+    if (typeof input.showPicker === 'function') {
+      overlay.overlay.classList.add('calendar-only');
+      input.showPicker();
+    } else {
+      overlay.overlay.classList.remove('calendar-only');
     }
   });
 }
