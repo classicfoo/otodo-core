@@ -93,6 +93,8 @@ function priorityLabel(value) {
   return priorityLabels[priority] || priorityLabels.none;
 }
 
+const priorityValues = ['none', 'low', 'med', 'high'];
+
 function dueBadgeClass(status) {
   if (status === 'overdue') return 'bg-danger-subtle text-danger';
   if (status === 'today') return 'bg-success-subtle text-success';
@@ -137,6 +139,32 @@ async function toggleStar(taskId, button) {
   };
   state.tasks.set(taskId, updated);
   setStarAppearance(button, next);
+  try {
+    await putTask(updated);
+    await addOutboxOp({
+      op_id: crypto.randomUUID(),
+      client_id: state.clientId,
+      type: 'upsert',
+      task: updated,
+    });
+    triggerSync();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function setTaskPriority(taskId, nextPriority) {
+  const task = state.tasks.get(taskId);
+  if (!task) return;
+  const priority = (nextPriority || 'none').toLowerCase();
+  if (task.priority === priority) return;
+  const updated = {
+    ...task,
+    priority,
+    updated_at: nowIso(),
+  };
+  state.tasks.set(taskId, updated);
+  updateRow(updated);
   try {
     await putTask(updated);
     await addOutboxOp({
@@ -243,7 +271,9 @@ function updateRow(task) {
   if (priorityBadge) {
     priorityBadge.className = `small priority-text ${priority.className}`.trim();
     priorityBadge.innerHTML = `<span class="d-none d-md-inline">${priority.label}</span><span class="d-inline d-md-none">${priority.short}</span>`;
-    priorityBadge.setAttribute('aria-label', priority.label);
+    priorityBadge.setAttribute('aria-label', `Priority: ${priority.label}. Click to change.`);
+    priorityBadge.setAttribute('role', 'button');
+    priorityBadge.setAttribute('tabindex', '0');
   }
   const starButton = row.querySelector('.star-toggle');
   if (starButton) {
@@ -251,6 +281,51 @@ function updateRow(task) {
   }
   row.classList.toggle('completed', isCompleted(task));
   return row;
+}
+
+function renderPriorityEditor(priorityBadge, task) {
+  if (!priorityBadge || priorityBadge.dataset.editing === 'true') return;
+  const row = priorityBadge.closest('.task-row');
+  if (!row) return;
+  const taskId = row.dataset.id;
+  if (!taskId) return;
+  priorityBadge.dataset.editing = 'true';
+  const select = document.createElement('select');
+  select.className = 'form-select form-select-sm priority-select';
+  select.setAttribute('aria-label', 'Set priority');
+  const current = (task.priority || 'none').toLowerCase();
+  priorityValues.forEach((value) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = priorityLabel(value).label;
+    if (value === current) option.selected = true;
+    select.appendChild(option);
+  });
+  priorityBadge.textContent = '';
+  priorityBadge.appendChild(select);
+  select.focus();
+
+  const finish = () => {
+    delete priorityBadge.dataset.editing;
+    const latest = state.tasks.get(taskId);
+    if (latest) updateRow(latest);
+  };
+
+  select.addEventListener('change', async () => {
+    await setTaskPriority(taskId, select.value);
+    finish();
+  });
+
+  select.addEventListener('blur', () => {
+    finish();
+  });
+
+  select.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      finish();
+    }
+  });
 }
 
 function refreshList() {
@@ -388,6 +463,29 @@ export async function initListView() {
     const row = event.target.closest('.task-row');
     if (!row) return;
     if (event.target.closest('.star-toggle')) return;
+    const priorityBadge = event.target.closest('.priority-text');
+    if (priorityBadge) {
+      event.preventDefault();
+      event.stopPropagation();
+      const task = state.tasks.get(row.dataset.id);
+      if (task) {
+        renderPriorityEditor(priorityBadge, task);
+      }
+    }
+  });
+
+  taskBody.addEventListener('keydown', (event) => {
+    const priorityBadge = event.target.closest('.priority-text');
+    if (!priorityBadge) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const row = priorityBadge.closest('.task-row');
+      if (!row) return;
+      const task = state.tasks.get(row.dataset.id);
+      if (task) {
+        renderPriorityEditor(priorityBadge, task);
+      }
+    }
   });
 
   window.addEventListener('online', triggerSync);

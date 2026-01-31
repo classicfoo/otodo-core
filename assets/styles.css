@@ -703,6 +703,18 @@ body.route-task #menu {
 .page-index .priority-text {
   text-align: center;
   min-width: 70px;
+  cursor: pointer;
+}
+
+.page-index .priority-text:focus-visible {
+  outline: 2px solid #0a2a66;
+  outline-offset: 2px;
+}
+
+.page-index .priority-select {
+  min-width: 96px;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
 }
 
 .page-index .star-toggle {
