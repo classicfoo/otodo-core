@@ -143,18 +143,17 @@ function compareTasks(a, b) {
   }
   const aDue = a.due_date ? new Date(a.due_date).getTime() : null;
   const bDue = b.due_date ? new Date(b.due_date).getTime() : null;
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const aOverdue = aDue !== null && aDue < today;
-  const bOverdue = bDue !== null && bDue < today;
-  if (aOverdue !== bOverdue) {
-    return aOverdue ? -1 : 1;
-  }
   if (aDue !== null && bDue !== null && aDue !== bDue) {
     return aDue - bDue;
   }
   if (aDue !== null && bDue === null) return -1;
   if (aDue === null && bDue !== null) return 1;
+  const priorityOrder = { high: 3, med: 2, medium: 2, low: 1, none: 0 };
+  const aPriority = priorityOrder[(a.priority || 'none').toLowerCase()] ?? 0;
+  const bPriority = priorityOrder[(b.priority || 'none').toLowerCase()] ?? 0;
+  if (aPriority !== bPriority) {
+    return bPriority - aPriority;
+  }
   return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
 }
 
