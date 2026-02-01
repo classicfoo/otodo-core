@@ -141,14 +141,20 @@ function compareTasks(a, b) {
   if (aCompleted !== bCompleted) {
     return aCompleted ? 1 : -1;
   }
-  const createdDelta = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-  if (createdDelta !== 0) {
-    return createdDelta;
+  const aDue = a.due_date ? new Date(a.due_date).getTime() : null;
+  const bDue = b.due_date ? new Date(b.due_date).getTime() : null;
+  if (aDue !== null && bDue !== null && aDue !== bDue) {
+    return aDue - bDue;
   }
+  if (aDue !== null && bDue === null) return -1;
+  if (aDue === null && bDue !== null) return 1;
   const priorityOrder = { high: 3, med: 2, medium: 2, low: 1, none: 0 };
   const aPriority = priorityOrder[(a.priority || 'none').toLowerCase()] ?? 0;
   const bPriority = priorityOrder[(b.priority || 'none').toLowerCase()] ?? 0;
-  return bPriority - aPriority;
+  if (aPriority !== bPriority) {
+    return bPriority - aPriority;
+  }
+  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
 }
 
 const priorityLabels = {
