@@ -2,8 +2,7 @@ import { getOutbox, getMeta } from './db_local.js';
 
 export async function updateSyncIndicator() {
   const syncIndicator = document.getElementById('sync-indicator');
-  const syncStatus = document.getElementById('sync-status');
-  const loginCta = document.getElementById('sync-login-cta');
+  const loginTop = document.getElementById('sync-login-top');
   if (!syncIndicator) return;
   const outbox = await getOutbox();
   const lastSyncError = await getMeta('last_sync_error');
@@ -15,16 +14,7 @@ export async function updateSyncIndicator() {
   } else {
     syncIndicator.classList.add('hidden');
   }
-  if (syncStatus) {
-    if (!outbox.length) {
-      syncStatus.textContent = 'All changes saved';
-    } else if (unauthorized) {
-      syncStatus.textContent = 'Sign in to sync changes';
-    } else {
-      syncStatus.textContent = `${outbox.length} change${outbox.length === 1 ? '' : 's'} pending`;
-    }
-  }
-  if (loginCta) {
-    loginCta.classList.toggle('hidden', !(outbox.length && unauthorized));
+  if (loginTop) {
+    loginTop.classList.toggle('hidden', !unauthorized);
   }
 }

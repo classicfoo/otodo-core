@@ -41,6 +41,7 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
       <a href="/index.php" class="navbar-brand text-decoration-none">Otodo</a>
       <div class="d-flex align-items-center gap-2">
         <span id="offline-indicator" class="badge bg-danger-subtle text-danger hidden">Offline</span>
+        <a href="/login.php" id="sync-login-top" class="badge bg-warning-subtle text-warning-emphasis text-decoration-none hidden">Sign in to sync</a>
         <span id="sync-indicator" class="badge bg-primary-subtle text-primary hidden">0 pending</span>
         <div class="dropdown">
           <button class="btn btn-outline-secondary btn-sm" type="button" id="taskMenu" data-bs-toggle="dropdown" aria-expanded="false">&#x2026;</button>
@@ -73,8 +74,6 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
           <button type="submit" class="btn w-100 text-start">Logout</button>
         </form>
       </div>
-      <div class="mt-3 small text-muted" id="sync-status" aria-live="polite">All changes saved</div>
-      <a href="/login.php" id="sync-login-cta" class="btn btn-sm btn-outline-primary mt-2 hidden">Sign in</a>
     </div>
   </div>
 
