@@ -113,6 +113,11 @@ export function getListFilter() {
   return listFilter;
 }
 
+export function resetListSearch() {
+  applySearchFilter('');
+  collapseSearch(true);
+}
+
 function isCompleted(task) {
   return Number(task.completed) === 1;
 }

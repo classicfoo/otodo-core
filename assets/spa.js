@@ -1,4 +1,9 @@
-import { initListView, initSearch, setListFilter } from './app.js';
+import {
+  initListView,
+  initSearch,
+  resetListSearch,
+  setListFilter,
+} from './app.js';
 import { initTaskView, showMissingTaskView } from './task.js';
 
 const listNav = document.getElementById('list-navbar');
@@ -15,11 +20,12 @@ function isLocalNavigation(url) {
 }
 
 function parseRoute(url) {
+  const hasViewParam = url.searchParams.has('view');
   const view = url.searchParams.get('view') === 'completed' ? 'completed' : 'active';
   if (url.pathname === '/task.php') {
     return { route: 'task', id: url.searchParams.get('id'), view };
   }
-  return { route: 'list', view };
+  return { route: 'list', view, hasViewParam };
 }
 
 function updateMenuActive(view) {
@@ -39,7 +45,7 @@ function updateMenuActive(view) {
   }
 }
 
-function showListView(view) {
+function showListView(view, hasViewParam) {
   document.body.classList.add('route-list');
   document.body.classList.remove('route-task');
   if (listNav) listNav.removeAttribute('aria-hidden');
@@ -47,6 +53,9 @@ function showListView(view) {
   if (listView) listView.removeAttribute('aria-hidden');
   if (taskView) taskView.setAttribute('aria-hidden', 'true');
   setListFilter(view);
+  if (!hasViewParam) {
+    resetListSearch();
+  }
   updateMenuActive(view);
 }
 
@@ -71,7 +80,7 @@ function applyRoute(controller, url) {
   if (route.route === 'task') {
     showTaskView(controller, route.id);
   } else {
-    showListView(route.view);
+    showListView(route.view, route.hasViewParam);
   }
 }
 
