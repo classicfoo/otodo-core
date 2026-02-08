@@ -570,14 +570,19 @@ function bindSearch() {
   searchClear.addEventListener('click', () => collapseSearch(true));
 
   const brandLink = document.querySelector('.app-brand');
-  if (brandLink) {
-    brandLink.addEventListener('click', (event) => {
+  if (brandLink && brandLink.dataset.searchBind !== 'true') {
+    brandLink.dataset.searchBind = 'true';
+    const handleBrandEvent = (event) => {
       const hasQuery = searchInput.value.trim() !== '' || state.searchQuery !== '';
       if (hasQuery || searchContainer.classList.contains('expanded')) {
         event.preventDefault();
         collapseSearch(true);
       }
-    });
+    };
+    brandLink.addEventListener('pointerdown', handleBrandEvent);
+    brandLink.addEventListener('pointerup', handleBrandEvent);
+    brandLink.addEventListener('touchend', handleBrandEvent, { passive: false });
+    brandLink.addEventListener('click', handleBrandEvent);
   }
 
   searchInput.addEventListener('input', (event) => {
