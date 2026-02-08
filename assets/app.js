@@ -569,6 +569,17 @@ function bindSearch() {
   searchToggle.addEventListener('click', () => expandSearch());
   searchClear.addEventListener('click', () => collapseSearch(true));
 
+  const brandLink = document.querySelector('.app-brand');
+  if (brandLink) {
+    brandLink.addEventListener('click', (event) => {
+      const hasQuery = searchInput.value.trim() !== '' || state.searchQuery !== '';
+      if (hasQuery || searchContainer.classList.contains('expanded')) {
+        event.preventDefault();
+        collapseSearch(true);
+      }
+    });
+  }
+
   searchInput.addEventListener('input', (event) => {
     applySearchFilter(event.target.value);
   });
