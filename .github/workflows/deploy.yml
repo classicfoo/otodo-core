@@ -10,17 +10,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (global SSH deploy key)
-        if: ${{ secrets.GLOBAL_SSH_PRIVATE_KEY != '' }}
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           ssh-key: ${{ secrets.GLOBAL_SSH_PRIVATE_KEY }}
           ssh-known-hosts: github.com
           persist-credentials: false
-
-      - name: Checkout (default token)
-        if: ${{ secrets.GLOBAL_SSH_PRIVATE_KEY == '' }}
-        uses: actions/checkout@v4
 
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
