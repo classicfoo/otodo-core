@@ -159,6 +159,11 @@ function compareTasks(a, b) {
   if (aPriority !== bPriority) {
     return bPriority - aPriority;
   }
+  const aStarred = Number(a.starred) === 1 ? 1 : 0;
+  const bStarred = Number(b.starred) === 1 ? 1 : 0;
+  if (aStarred !== bStarred) {
+    return bStarred - aStarred;
+  }
   return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
 }
 
