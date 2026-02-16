@@ -254,6 +254,21 @@ function registerAutosaveInput(input, events = ['input']) {
   });
 }
 
+function handleDescriptionDoubleSpaceTab(event) {
+  if (!descriptionInput) return;
+  if (event.key !== ' ' || event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.isComposing) return;
+  if (descriptionInput.selectionStart !== descriptionInput.selectionEnd) return;
+  const caret = descriptionInput.selectionStart;
+  if (caret < 1) return;
+  if (descriptionInput.value.charAt(caret - 1) !== ' ') return;
+  event.preventDefault();
+  const nextValue = `${descriptionInput.value.slice(0, caret - 1)}\t${descriptionInput.value.slice(caret)}`;
+  descriptionInput.value = nextValue;
+  descriptionInput.setSelectionRange(caret, caret);
+  scheduleAutosave();
+}
+
 async function handleDelete() {
   if (!task) return;
   await deleteTask(task.id);
@@ -297,6 +312,9 @@ export async function initTaskView(options = {}) {
   registerAutosaveInput(priorityInput, ['change']);
   registerAutosaveInput(starInput, ['change']);
   registerAutosaveInput(descriptionInput, ['input']);
+  if (descriptionInput) {
+    descriptionInput.addEventListener('keydown', handleDescriptionDoubleSpaceTab);
+  }
 
   window.addEventListener('online', updateOfflineIndicator);
   window.addEventListener('offline', updateOfflineIndicator);
