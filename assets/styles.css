@@ -437,12 +437,12 @@ body.route-task #menu {
 
 .inline-date {
   color: var(--inline-date-color);
+  font-weight: 600;
+  white-space: nowrap;
   background: var(--inline-date-background);
-  border: 1px solid var(--inline-date-border);
-  border-radius: 999px;
-  padding: 0 0.32rem;
-  display: inline-flex;
-  align-items: center;
+  box-shadow: 0 0 0 1px var(--inline-date-border);
+  border-radius: 2px;
+  padding: 0;
 }
 
 .link-actions-popover {
