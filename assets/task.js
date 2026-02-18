@@ -1,6 +1,7 @@
 import { getTask, putTask, deleteTask, addOutbox } from './db_local.js';
 import { ensureClientId, syncAll } from './sync.js';
 import { updateSyncIndicator } from './sync_indicator.js';
+import { initTaskDescriptionEditor } from './task_description_editor.js';
 
 const form = document.getElementById('edit-form');
 const titleInput = document.getElementById('edit-title');
@@ -9,6 +10,7 @@ const completedInput = document.getElementById('edit-completed');
 const priorityInput = document.getElementById('edit-priority');
 const starInput = document.getElementById('edit-star');
 const descriptionInput = document.getElementById('edit-description');
+const descriptionEditorRoot = document.getElementById('edit-description-editor');
 const deleteButton = document.getElementById('delete-task');
 const missingTask = document.getElementById('missing-task');
 const offlineIndicator = document.getElementById('offline-indicator');
@@ -38,6 +40,7 @@ let clientId = null;
 let ready = false;
 let autosaveTimeout = null;
 let navigateToList = null;
+let descriptionEditor = null;
 
 function showToast(message) {
   toast.textContent = message;
@@ -121,6 +124,9 @@ function populateForm(loadedTask) {
   }
   if (descriptionInput) {
     descriptionInput.value = loadedTask.description || '';
+    if (descriptionEditor && typeof descriptionEditor.updateDescription === 'function') {
+      descriptionEditor.updateDescription();
+    }
   }
 }
 
@@ -254,21 +260,6 @@ function registerAutosaveInput(input, events = ['input']) {
   });
 }
 
-function handleDescriptionDoubleSpaceTab(event) {
-  if (!descriptionInput) return;
-  if (event.key !== ' ' || event.ctrlKey || event.metaKey || event.altKey) return;
-  if (event.isComposing) return;
-  if (descriptionInput.selectionStart !== descriptionInput.selectionEnd) return;
-  const caret = descriptionInput.selectionStart;
-  if (caret < 1) return;
-  if (descriptionInput.value.charAt(caret - 1) !== ' ') return;
-  event.preventDefault();
-  const nextValue = `${descriptionInput.value.slice(0, caret - 1)}\t${descriptionInput.value.slice(caret)}`;
-  descriptionInput.value = nextValue;
-  descriptionInput.setSelectionRange(caret, caret);
-  scheduleAutosave();
-}
-
 async function handleDelete() {
   if (!task) return;
   await deleteTask(task.id);
@@ -306,15 +297,15 @@ export async function initTaskView(options = {}) {
   form.addEventListener('submit', (event) => event.preventDefault());
   deleteButton.addEventListener('click', handleDelete);
 
+  if (descriptionEditorRoot) {
+    descriptionEditor = initTaskDescriptionEditor(descriptionEditorRoot, scheduleAutosave);
+  }
+
   registerAutosaveInput(titleInput, ['input']);
   registerAutosaveInput(dueInput, ['input', 'change']);
   registerAutosaveInput(completedInput, ['change']);
   registerAutosaveInput(priorityInput, ['change']);
   registerAutosaveInput(starInput, ['change']);
-  registerAutosaveInput(descriptionInput, ['input']);
-  if (descriptionInput) {
-    descriptionInput.addEventListener('keydown', handleDescriptionDoubleSpaceTab);
-  }
 
   window.addEventListener('online', updateOfflineIndicator);
   window.addEventListener('offline', updateOfflineIndicator);

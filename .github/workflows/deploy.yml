@@ -3,7 +3,7 @@ name: Deploy to InfinityFree (FTP)
 on:
   push:
     branches:
-      - prod
+      - feature/port-prism-description-editor
   workflow_dispatch:
 
 jobs:

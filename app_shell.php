@@ -122,7 +122,10 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
         </div>
         <div class="mb-3">
           <label class="form-label" for="edit-description">Description</label>
-          <textarea id="edit-description" name="description" class="form-control" rows="4" spellcheck="false"></textarea>
+          <div id="edit-description-editor" class="prism-editor" data-language="html">
+            <textarea id="edit-description" name="description" class="prism-editor__textarea" spellcheck="false"></textarea>
+            <pre class="prism-editor__preview"><code class="language-markup"></code></pre>
+          </div>
         </div>
         <div class="d-flex align-items-center gap-2">
           <a href="/index.php" class="btn btn-secondary">Back</a>
