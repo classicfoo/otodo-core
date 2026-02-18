@@ -174,6 +174,49 @@ function wrapLinesWithColors(highlightedHtml, rawText, lineRules) {
     .join('');
 }
 
+function applyCapitalization(text, shouldCapitalize, lineRules) {
+  if (!shouldCapitalize) {
+    return text;
+  }
+
+  const rulesToUse = pickRules(lineRules);
+  const lines = text.split('\n');
+  const updatedLines = lines.map((line) => {
+    const trimmed = line.replace(/^[\t ]+/, '');
+    const matchesRule = rulesToUse.some((rule) => rule && typeof rule.prefix === 'string' && trimmed.startsWith(rule.prefix));
+    if (!matchesRule) {
+      return line;
+    }
+
+    const leadingMatch = line.match(/^[\t ]*/);
+    const leading = leadingMatch ? leadingMatch[0] : '';
+    let updated = line.slice(leading.length);
+
+    const firstLetterIndex = updated.search(/[A-Za-z]/);
+    if (firstLetterIndex !== -1) {
+      updated = updated.slice(0, firstLetterIndex)
+        + updated[firstLetterIndex].toUpperCase()
+        + updated.slice(firstLetterIndex + 1);
+    }
+
+    const prefixSpaceIndex = updated.indexOf(' ');
+    if (prefixSpaceIndex !== -1) {
+      const afterPrefix = updated.slice(prefixSpaceIndex + 1);
+      const contentLetterIndex = afterPrefix.search(/[A-Za-z]/);
+      if (contentLetterIndex !== -1) {
+        const absoluteIndex = prefixSpaceIndex + 1 + contentLetterIndex;
+        updated = updated.slice(0, absoluteIndex)
+          + updated[absoluteIndex].toUpperCase()
+          + updated.slice(absoluteIndex + 1);
+      }
+    }
+
+    return leading + updated;
+  });
+
+  return updatedLines.join('\n');
+}
+
 function findUrlAtPosition(value, position) {
   if (typeof value !== 'string' || typeof position !== 'number') {
     return null;
@@ -270,6 +313,7 @@ export function initTaskDescriptionEditor(details, queueSave, options = {}) {
   const save = typeof queueSave === 'function' ? queueSave : () => {};
   const lineRules = pickRules(options.lineRules);
   const dateRegexes = buildDateRegexes(options.dateFormats);
+  const capitalizeSentences = !!options.capitalizeSentences;
 
   if (options.textColor) {
     details.style.setProperty('--details-text-color', options.textColor);
@@ -281,12 +325,19 @@ export function initTaskDescriptionEditor(details, queueSave, options = {}) {
   }
 
   function syncDescription() {
+    const selectionStart = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
     const text = normalizeNewlines(textarea.value || '');
-    if (text !== textarea.value) {
-      textarea.value = text;
+    const capitalized = applyCapitalization(text, capitalizeSentences, lineRules);
+    if (capitalized !== textarea.value) {
+      textarea.value = capitalized;
+      if (typeof selectionStart === 'number' && typeof selectionEnd === 'number') {
+        textarea.selectionStart = selectionStart;
+        textarea.selectionEnd = selectionEnd;
+      }
     }
-    preview.innerHTML = wrapLinesWithColors(highlightHtml(text, dateRegexes), text, lineRules);
-    return text;
+    preview.innerHTML = wrapLinesWithColors(highlightHtml(capitalized, dateRegexes), capitalized, lineRules);
+    return capitalized;
   }
 
   function insertAtSelection(text) {

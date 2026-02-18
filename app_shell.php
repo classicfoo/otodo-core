@@ -8,6 +8,7 @@ $lineRulesJson = json_encode($lineRules, JSON_UNESCAPED_SLASHES);
 $dateFormats = is_array($dateFormats ?? null) ? $dateFormats : [];
 $dateFormatsJson = json_encode($dateFormats, JSON_UNESCAPED_SLASHES);
 $dateColor = normalize_hex_color((string)($dateColor ?? '#FDA90D'), '#FDA90D');
+$capitalizeSentences = (bool)($capitalizeSentences ?? true);
 ?>
 <!doctype html>
 <html lang="en">
@@ -150,6 +151,7 @@ $dateColor = normalize_hex_color((string)($dateColor ?? '#FDA90D'), '#FDA90D');
     window.OTODO_LINE_RULES = <?php echo $lineRulesJson ?: '[]'; ?>;
     window.OTODO_DATE_FORMATS = <?php echo $dateFormatsJson ?: '[]'; ?>;
     window.OTODO_DATE_COLOR = "<?php echo htmlspecialchars($dateColor, ENT_QUOTES); ?>";
+    window.OTODO_CAPITALIZE_SENTENCES = <?php echo $capitalizeSentences ? 'true' : 'false'; ?>;
   </script>
   <script src="/assets/bootstrap.bundle.min.js"></script>
   <script type="module" src="/assets/auth_offline.js"></script>

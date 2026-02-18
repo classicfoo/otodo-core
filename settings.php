@@ -20,6 +20,7 @@ $successMessage = '';
 $lineRules = get_user_line_rules($db, (int)$currentUser['id']);
 $dateFormats = get_user_date_formats($db, (int)$currentUser['id']);
 $dateColor = get_user_date_color($db, (int)$currentUser['id']);
+$capitalizeSentences = get_user_capitalize_sentences($db, (int)$currentUser['id']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_line_rules') {
     $rawRules = json_decode((string)($_POST['line_rules_json'] ?? '[]'), true);
@@ -30,17 +31,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
     $dateFormatsInput = (string)($_POST['date_formats'] ?? '');
     $dateFormatsSanitized = sanitize_date_formats_input($dateFormatsInput);
     $dateColorInput = (string)($_POST['date_color'] ?? '#FDA90D');
+    $capitalizeInput = isset($_POST['capitalize_sentences']);
 
     $savedRules = save_user_line_rules($db, (int)$currentUser['id'], $sanitized);
     $savedFormats = save_user_date_formats($db, (int)$currentUser['id'], $dateFormatsSanitized);
     $savedDateColor = save_user_date_color($db, (int)$currentUser['id'], $dateColorInput);
+    $savedCapitalize = save_user_capitalize_sentences($db, (int)$currentUser['id'], $capitalizeInput);
 
-    if (!$savedRules || !$savedFormats || !$savedDateColor) {
+    if (!$savedRules || !$savedFormats || !$savedDateColor || !$savedCapitalize) {
         $errors[] = 'Unable to save editor settings. Please try again.';
     } else {
         $lineRules = get_user_line_rules($db, (int)$currentUser['id']);
         $dateFormats = get_user_date_formats($db, (int)$currentUser['id']);
         $dateColor = get_user_date_color($db, (int)$currentUser['id']);
+        $capitalizeSentences = get_user_capitalize_sentences($db, (int)$currentUser['id']);
         $successMessage = 'Editor settings saved.';
     }
 }
@@ -82,6 +86,11 @@ include __DIR__ . '/auth_header.php';
       <label class="form-label" for="date_formats">Date formats to highlight</label>
       <textarea class="form-control" id="date_formats" name="date_formats" rows="4" placeholder="DD MMM YYYY&#10;DD/MM/YYYY"><?php echo htmlspecialchars(implode("\n", $dateFormats), ENT_QUOTES, 'UTF-8'); ?></textarea>
       <p class="hint mb-0 mt-1">One format per line. Supported tokens: D, DD, M, MM, MMM, MMMM, YY, YYYY.</p>
+    </div>
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" role="switch" id="capitalize_sentences" name="capitalize_sentences" <?php echo $capitalizeSentences ? 'checked' : ''; ?>>
+      <label class="form-check-label" for="capitalize_sentences">Capitalize matching lines while typing</label>
+      <p class="hint mb-0">Uppercases the first letter (and the first word after a prefix) on lines that use your custom prefixes; other lines stay unchanged.</p>
     </div>
     <div>
       <label class="form-label">Custom line rules</label>

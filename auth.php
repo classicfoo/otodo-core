@@ -31,6 +31,9 @@ if (!in_array('date_formats_json', $columns, true)) {
 if (!in_array('date_color', $columns, true)) {
     $db->exec('ALTER TABLE users ADD COLUMN date_color TEXT');
 }
+if (!in_array('capitalize_sentences', $columns, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN capitalize_sentences INTEGER NOT NULL DEFAULT 1');
+}
 
 function get_default_line_rules(): array
 {
@@ -242,6 +245,33 @@ function save_user_date_color(SQLite3 $db, int $userId, string $color): bool
     $normalized = normalize_hex_color($color, '#FDA90D');
     $stmt = $db->prepare('UPDATE users SET date_color = :date_color WHERE id = :id');
     $stmt->bindValue(':date_color', $normalized, SQLITE3_TEXT);
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    return (bool)$result;
+}
+
+function get_user_capitalize_sentences(SQLite3 $db, int $userId): bool
+{
+    if ($userId <= 0) {
+        return true;
+    }
+    $stmt = $db->prepare('SELECT capitalize_sentences FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+    if (!$row || !array_key_exists('capitalize_sentences', $row)) {
+        return true;
+    }
+    return (int)$row['capitalize_sentences'] === 1;
+}
+
+function save_user_capitalize_sentences(SQLite3 $db, int $userId, bool $enabled): bool
+{
+    if ($userId <= 0) {
+        return false;
+    }
+    $stmt = $db->prepare('UPDATE users SET capitalize_sentences = :enabled WHERE id = :id');
+    $stmt->bindValue(':enabled', $enabled ? 1 : 0, SQLITE3_INTEGER);
     $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
     $result = $stmt->execute();
     return (bool)$result;
