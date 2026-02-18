@@ -1,6 +1,6 @@
 <?php
 if (!isset($pageTitle)) {
-    $pageTitle = 'Auth';
+    $pageTitle = 'Otodo Core';
 }
 if (!isset($pageHeading)) {
     $pageHeading = 'Welcome';
@@ -16,7 +16,7 @@ $currentUser = $currentUser ?? null;
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?></title>
+    <title><?php echo htmlspecialchars($pageTitle . ' - Otodo Core', ENT_QUOTES, 'UTF-8'); ?></title>
     <link href="/assets/bootstrap.min.css" rel="stylesheet">
     <style>
       :root {
@@ -164,7 +164,7 @@ $currentUser = $currentUser ?? null;
   <body>
     <nav class="app-nav">
       <div class="container-fluid px-4 py-3 d-flex align-items-center justify-content-between">
-        <span class="app-brand">Otodo</span>
+        <span class="app-brand">Otodo Core</span>
         <button class="btn btn-outline-dark btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainMenu" aria-controls="mainMenu">
           <span class="visually-hidden">Open menu</span>
           ☰
@@ -187,6 +187,8 @@ $currentUser = $currentUser ?? null;
           </p>
           <div class="menu-card">
             <?php if ($currentUser): ?>
+              <a class="menu-item" href="/index.php">Active tasks</a>
+              <a class="menu-item" href="/settings.php">Settings</a>
               <form method="post" class="menu-action" data-offline-logout="true">
                 <input type="hidden" name="action" value="logout">
                 <button type="submit">Logout</button>
@@ -202,7 +204,7 @@ $currentUser = $currentUser ?? null;
     <div class="app-shell">
       <?php if ($showPageHeader): ?>
         <header class="d-flex flex-column gap-2 mb-4">
-          <span class="brand-mark">Otodo</span>
+          <span class="brand-mark">Otodo Core</span>
           <h1 class="h3 mb-0"><?php echo htmlspecialchars($pageHeading, ENT_QUOTES, 'UTF-8'); ?></h1>
           <?php if ($pageHint !== ''): ?>
             <p class="hint"><?php echo htmlspecialchars($pageHint, ENT_QUOTES, 'UTF-8'); ?></p>

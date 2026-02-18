@@ -30,7 +30,7 @@ $currentUser = current_user();
 
 $pageTitle = 'Log in';
 $pageHeading = 'Welcome back';
-$pageHint = 'Sign in to access your Otodo tasks.';
+$pageHint = 'Sign in to access your Otodo Core tasks.';
 
 include __DIR__ . '/auth_header.php';
 ?>

@@ -312,6 +312,152 @@ body.route-task #menu {
   color: var(--muted);
 }
 
+.prism-editor {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  min-height: 16rem;
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --details-text-color: #1f2937;
+  --inline-date-color: #fda90d;
+  --inline-date-background: rgba(253, 169, 13, 0.12);
+  --inline-date-border: rgba(253, 169, 13, 0.28);
+}
+
+.prism-editor__textarea,
+.prism-editor__preview {
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  tab-size: 4;
+}
+
+.prism-editor__textarea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  resize: none;
+  border: none;
+  margin: 0;
+  padding: 0.75rem;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--details-text-color);
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  outline: none;
+  z-index: 1;
+}
+
+.prism-editor__textarea::selection {
+  background: rgba(37, 99, 235, 0.2);
+  color: transparent;
+}
+
+.prism-editor__textarea::-moz-selection {
+  background: rgba(37, 99, 235, 0.2);
+  color: transparent;
+}
+
+.prism-editor__preview {
+  position: relative;
+  margin: 0;
+  pointer-events: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow: auto;
+  padding: 0.75rem;
+  min-height: 100%;
+  z-index: 0;
+}
+
+.prism-editor__preview code {
+  display: block;
+  color: var(--details-text-color);
+}
+
+.prism-editor .code-line {
+  display: block;
+}
+
+.prism-editor .code-line-task {
+  color: #1d4ed8;
+}
+
+.prism-editor .code-line-note {
+  color: #1e7a3e;
+}
+
+.prism-editor .code-line-milestone {
+  color: #800000;
+}
+
+.prism-editor .code-line-heading {
+  color: #111827;
+  font-weight: 700;
+}
+
+.prism-editor .code-line-done {
+  color: #6b7280;
+}
+
+.prism-editor .token.tag,
+.prism-editor .token.tag-name {
+  color: #d63384;
+}
+
+.prism-editor .token.attr-name {
+  color: #fd7e14;
+}
+
+.prism-editor .token.attr-value {
+  color: #6f42c1;
+}
+
+.inline-link {
+  color: #0d6efd;
+  text-decoration: underline;
+  pointer-events: auto;
+}
+
+.inline-hashtag {
+  color: #6f42c1;
+  background: rgba(111, 66, 193, 0.12);
+  border: 1px solid rgba(111, 66, 193, 0.24);
+  border-radius: 999px;
+  padding: 0 0.32rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.inline-date {
+  color: var(--inline-date-color);
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--inline-date-background);
+  box-shadow: 0 0 0 1px var(--inline-date-border);
+  border-radius: 2px;
+  padding: 0;
+}
+
+.link-actions-popover {
+  position: fixed;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+  z-index: 1200;
+}
+
 #add-form button,
 .edit-form button {
   background: var(--primary);

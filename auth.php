@@ -22,6 +22,260 @@ if (!in_array('first_name', $columns, true)) {
 if (!in_array('last_name', $columns, true)) {
     $db->exec('ALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT ""');
 }
+if (!in_array('line_rules_json', $columns, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN line_rules_json TEXT');
+}
+if (!in_array('date_formats_json', $columns, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN date_formats_json TEXT');
+}
+if (!in_array('date_color', $columns, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN date_color TEXT');
+}
+if (!in_array('capitalize_sentences', $columns, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN capitalize_sentences INTEGER NOT NULL DEFAULT 1');
+}
+
+function get_default_line_rules(): array
+{
+    return [
+        ['prefix' => 'T ', 'label' => 'Task', 'color' => '#1D4ED8', 'className' => 'code-line-task'],
+        ['prefix' => 'N ', 'label' => 'Note', 'color' => '#1E7A3E', 'className' => 'code-line-note'],
+        ['prefix' => 'M ', 'label' => 'Milestone', 'color' => '#800000', 'className' => 'code-line-milestone'],
+        ['prefix' => '# ', 'label' => 'Heading', 'color' => '#212529', 'weight' => '700', 'className' => 'code-line-heading'],
+        ['prefix' => 'X ', 'label' => 'Done', 'color' => '#6C757D', 'className' => 'code-line-done'],
+    ];
+}
+
+function sanitize_line_rules($rules): array
+{
+    if (!is_array($rules)) {
+        return [];
+    }
+
+    $cleaned = [];
+    foreach ($rules as $rule) {
+        if (!is_array($rule)) {
+            continue;
+        }
+        $prefix = isset($rule['prefix']) ? (string)$rule['prefix'] : '';
+        if (trim($prefix) === '') {
+            continue;
+        }
+        $label = isset($rule['label']) ? trim((string)$rule['label']) : '';
+        $color = isset($rule['color']) ? strtoupper(trim((string)$rule['color'])) : '';
+        if ($color !== '' && !preg_match('/^#[0-9A-F]{6}$/', $color)) {
+            $color = '';
+        }
+        $weight = isset($rule['weight']) ? (string)$rule['weight'] : '';
+        if ($weight !== '' && !in_array($weight, ['400', '700'], true)) {
+            $weight = '';
+        }
+        $className = isset($rule['className']) ? trim((string)$rule['className']) : '';
+        if ($className !== '' && !preg_match('/^[A-Za-z0-9_-]+$/', $className)) {
+            $className = '';
+        }
+
+        $entry = ['prefix' => $prefix];
+        if ($label !== '') {
+            $entry['label'] = $label;
+        }
+        if ($color !== '') {
+            $entry['color'] = $color;
+        }
+        if ($weight !== '') {
+            $entry['weight'] = $weight;
+        }
+        if ($className !== '') {
+            $entry['className'] = $className;
+        }
+
+        $cleaned[] = $entry;
+        if (count($cleaned) >= 25) {
+            break;
+        }
+    }
+
+    return $cleaned;
+}
+
+function decode_line_rules_from_storage(?string $raw): array
+{
+    $decoded = json_decode((string)$raw, true);
+    $rules = sanitize_line_rules($decoded);
+    if (!$rules) {
+        return get_default_line_rules();
+    }
+    return $rules;
+}
+
+function get_user_line_rules(SQLite3 $db, int $userId): array
+{
+    if ($userId <= 0) {
+        return get_default_line_rules();
+    }
+    $stmt = $db->prepare('SELECT line_rules_json FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+    return decode_line_rules_from_storage($row['line_rules_json'] ?? null);
+}
+
+function save_user_line_rules(SQLite3 $db, int $userId, array $rules): bool
+{
+    if ($userId <= 0) {
+        return false;
+    }
+    $sanitized = sanitize_line_rules($rules);
+    if (!$sanitized) {
+        $sanitized = get_default_line_rules();
+    }
+    $encoded = json_encode($sanitized, JSON_UNESCAPED_SLASHES);
+    $stmt = $db->prepare('UPDATE users SET line_rules_json = :line_rules_json WHERE id = :id');
+    $stmt->bindValue(':line_rules_json', $encoded, SQLITE3_TEXT);
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    return (bool)$result;
+}
+
+function get_default_date_formats(): array
+{
+    return [
+        'DD MMM YYYY',
+        'DD MMM YY',
+        'DD/MM/YYYY',
+        'DD/MM/YY',
+        'DD-MM-YYYY',
+        'DD-MM-YY',
+    ];
+}
+
+function sanitize_date_formats_input($input): array
+{
+    if (is_string($input)) {
+        $lines = preg_split('/\r\n|\r|\n/', $input);
+    } elseif (is_array($input)) {
+        $lines = $input;
+    } else {
+        $lines = [];
+    }
+
+    $cleaned = [];
+    foreach ($lines as $line) {
+        $format = trim((string)$line);
+        if ($format === '') {
+            continue;
+        }
+        if (!preg_match('/(DD|D|MMMM|MMM|MM|M|YYYY|YY)/', $format)) {
+            continue;
+        }
+        $cleaned[] = mb_substr($format, 0, 60);
+    }
+
+    $unique = array_values(array_unique($cleaned));
+    if (!$unique) {
+        return get_default_date_formats();
+    }
+    return $unique;
+}
+
+function decode_date_formats_from_storage(?string $value): array
+{
+    if (!$value) {
+        return get_default_date_formats();
+    }
+    $decoded = json_decode($value, true);
+    if (!is_array($decoded)) {
+        return get_default_date_formats();
+    }
+    return sanitize_date_formats_input($decoded);
+}
+
+function save_user_date_formats(SQLite3 $db, int $userId, array $formats): bool
+{
+    if ($userId <= 0) {
+        return false;
+    }
+    $sanitized = sanitize_date_formats_input($formats);
+    $encoded = json_encode(array_values($sanitized), JSON_UNESCAPED_SLASHES);
+    $stmt = $db->prepare('UPDATE users SET date_formats_json = :date_formats_json WHERE id = :id');
+    $stmt->bindValue(':date_formats_json', $encoded, SQLITE3_TEXT);
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    return (bool)$result;
+}
+
+function get_user_date_formats(SQLite3 $db, int $userId): array
+{
+    if ($userId <= 0) {
+        return get_default_date_formats();
+    }
+    $stmt = $db->prepare('SELECT date_formats_json FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+    return decode_date_formats_from_storage($row['date_formats_json'] ?? null);
+}
+
+function normalize_hex_color(string $color, string $default = '#FDA90D'): string
+{
+    $value = strtoupper(trim($color));
+    if (!preg_match('/^#[0-9A-F]{6}$/', $value)) {
+        return strtoupper($default);
+    }
+    return $value;
+}
+
+function get_user_date_color(SQLite3 $db, int $userId): string
+{
+    if ($userId <= 0) {
+        return '#FDA90D';
+    }
+    $stmt = $db->prepare('SELECT date_color FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+    return normalize_hex_color((string)($row['date_color'] ?? ''), '#FDA90D');
+}
+
+function save_user_date_color(SQLite3 $db, int $userId, string $color): bool
+{
+    if ($userId <= 0) {
+        return false;
+    }
+    $normalized = normalize_hex_color($color, '#FDA90D');
+    $stmt = $db->prepare('UPDATE users SET date_color = :date_color WHERE id = :id');
+    $stmt->bindValue(':date_color', $normalized, SQLITE3_TEXT);
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    return (bool)$result;
+}
+
+function get_user_capitalize_sentences(SQLite3 $db, int $userId): bool
+{
+    if ($userId <= 0) {
+        return true;
+    }
+    $stmt = $db->prepare('SELECT capitalize_sentences FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+    if (!$row || !array_key_exists('capitalize_sentences', $row)) {
+        return true;
+    }
+    return (int)$row['capitalize_sentences'] === 1;
+}
+
+function save_user_capitalize_sentences(SQLite3 $db, int $userId, bool $enabled): bool
+{
+    if ($userId <= 0) {
+        return false;
+    }
+    $stmt = $db->prepare('UPDATE users SET capitalize_sentences = :enabled WHERE id = :id');
+    $stmt->bindValue(':enabled', $enabled ? 1 : 0, SQLITE3_INTEGER);
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    return (bool)$result;
+}
 
 function handle_register(SQLite3 $db, string $email, string $firstName, string $lastName, string $password): array
 {

@@ -3,6 +3,12 @@ declare(strict_types=1);
 
 $initialRoute = $initialRoute ?? 'list';
 $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
+$lineRules = is_array($lineRules ?? null) ? $lineRules : [];
+$lineRulesJson = json_encode($lineRules, JSON_UNESCAPED_SLASHES);
+$dateFormats = is_array($dateFormats ?? null) ? $dateFormats : [];
+$dateFormatsJson = json_encode($dateFormats, JSON_UNESCAPED_SLASHES);
+$dateColor = normalize_hex_color((string)($dateColor ?? '#FDA90D'), '#FDA90D');
+$capitalizeSentences = (bool)($capitalizeSentences ?? true);
 ?>
 <!doctype html>
 <html lang="en">
@@ -10,14 +16,14 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>" />
-  <title>Otodo</title>
+  <title>Otodo Core</title>
   <link rel="stylesheet" href="/assets/bootstrap.min.css" />
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
 <body class="bg-light page-index <?php echo $routeClass; ?>">
   <nav class="navbar navbar-light bg-white mb-4" id="list-navbar">
     <div class="container d-flex justify-content-between align-items-center">
-      <a href="/index.php" class="navbar-brand mb-0 h1 text-decoration-none">Otodo</a>
+      <a href="/index.php" class="navbar-brand mb-0 h1 text-decoration-none">Otodo Core</a>
       <div class="d-flex align-items-center header-actions ms-auto">
         <div class="task-search" id="task-search" aria-expanded="false">
           <button class="search-toggle" type="button" id="task-search-toggle" aria-label="Search tasks">
@@ -38,7 +44,7 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
 
   <nav class="navbar navbar-light bg-white mb-4" id="task-navbar">
     <div class="container d-flex justify-content-between align-items-center">
-      <a href="/index.php" class="navbar-brand text-decoration-none">Otodo</a>
+      <a href="/index.php" class="navbar-brand text-decoration-none">Otodo Core</a>
       <div class="d-flex align-items-center gap-2">
         <span id="offline-indicator" class="badge bg-danger-subtle text-danger hidden">Offline</span>
         <a href="/login.php" id="sync-login-top" class="badge bg-warning-subtle text-warning-emphasis text-decoration-none hidden">Sign in to sync</a>
@@ -68,6 +74,7 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
       <div class="list-group">
         <a href="/index.php" id="menu-view-active" class="list-group-item list-group-item-action" <?php echo $taskFilter === 'active' ? 'aria-current="page"' : ''; ?>>Active Tasks</a>
         <a href="/index.php?view=completed" id="menu-view-completed" class="list-group-item list-group-item-action" <?php echo $taskFilter === 'completed' ? 'aria-current="page"' : ''; ?>>Completed Tasks</a>
+        <a href="/settings.php" class="list-group-item list-group-item-action">Settings</a>
         <button type="button" class="list-group-item list-group-item-action text-start" id="clear-cache-btn">Clear cache</button>
         <form method="post" class="list-group-item list-group-item-action p-0" data-offline-logout="true">
           <input type="hidden" name="action" value="logout">
@@ -122,7 +129,10 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
         </div>
         <div class="mb-3">
           <label class="form-label" for="edit-description">Description</label>
-          <textarea id="edit-description" name="description" class="form-control" rows="4" spellcheck="false"></textarea>
+          <div id="edit-description-editor" class="prism-editor" data-language="html">
+            <textarea id="edit-description" name="description" class="prism-editor__textarea" spellcheck="false"></textarea>
+            <pre class="prism-editor__preview"><code class="language-markup"></code></pre>
+          </div>
         </div>
         <div class="d-flex align-items-center gap-2">
           <a href="/index.php" class="btn btn-secondary">Back</a>
@@ -138,6 +148,10 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
     window.OTODO_CSRF = "<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>";
     window.OTODO_SERVER_AUTH = <?php echo $serverAuth ? 'true' : 'false'; ?>;
     window.OTODO_AUTH_GATE = 'app';
+    window.OTODO_LINE_RULES = <?php echo $lineRulesJson ?: '[]'; ?>;
+    window.OTODO_DATE_FORMATS = <?php echo $dateFormatsJson ?: '[]'; ?>;
+    window.OTODO_DATE_COLOR = "<?php echo htmlspecialchars($dateColor, ENT_QUOTES); ?>";
+    window.OTODO_CAPITALIZE_SENTENCES = <?php echo $capitalizeSentences ? 'true' : 'false'; ?>;
   </script>
   <script src="/assets/bootstrap.bundle.min.js"></script>
   <script type="module" src="/assets/auth_offline.js"></script>
