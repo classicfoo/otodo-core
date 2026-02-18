@@ -55,7 +55,80 @@ function pickRules(lineRules) {
   return DEFAULT_RULES;
 }
 
-function highlightHtml(text = '') {
+function hexToRgba(hex, alpha) {
+  const safeAlpha = Math.max(0, Math.min(1, Number(alpha)));
+  const match = String(hex || '').trim().match(/^#([0-9a-f]{6})$/i);
+  if (!match) {
+    return `rgba(253, 169, 13, ${safeAlpha})`;
+  }
+  const value = match[1];
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+}
+
+function buildDateRegexes(dateFormats = []) {
+  if (!Array.isArray(dateFormats)) {
+    return [];
+  }
+
+  const tokenMap = {
+    DD: '(0?[1-9]|[12][0-9]|3[01])',
+    D: '(0?[1-9]|[12][0-9]|3[01])',
+    MMMM: '(January|February|March|April|May|June|July|August|September|October|November|December)',
+    MMM: '(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)',
+    MM: '(0?[1-9]|1[0-2])',
+    M: '(0?[1-9]|1[0-2])',
+    YYYY: '\\d{4}',
+    YY: '\\d{2}',
+  };
+
+  function toRegexString(format) {
+    if (typeof format !== 'string' || !format.trim()) {
+      return null;
+    }
+    const trimmed = format.trim();
+    const tokenPattern = /(DD|D|MMMM|MMM|MM|M|YYYY|YY)/g;
+    let lastIndex = 0;
+    let match;
+    const parts = [];
+
+    while ((match = tokenPattern.exec(trimmed))) {
+      const textBefore = trimmed.slice(lastIndex, match.index);
+      if (textBefore) {
+        parts.push(escapeRegex(textBefore));
+      }
+      const replacement = tokenMap[match[0]];
+      if (!replacement) {
+        return null;
+      }
+      parts.push(replacement);
+      lastIndex = tokenPattern.lastIndex;
+    }
+
+    const trailing = trimmed.slice(lastIndex);
+    if (trailing) {
+      parts.push(escapeRegex(trailing));
+    }
+    if (!parts.length) {
+      return null;
+    }
+    return `\\b${parts.join('')}\\b`;
+  }
+
+  return dateFormats
+    .map(toRegexString)
+    .filter(Boolean)
+    .map((pattern) => new RegExp(pattern, 'giu'));
+}
+
+function capitalizeMonths(text = '') {
+  const monthPattern = /\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/gi;
+  return text.replace(monthPattern, (match) => match.charAt(0).toUpperCase() + match.slice(1).toLowerCase());
+}
+
+function highlightHtml(text = '', dateRegexes = []) {
   const escaped = escapeHtml(text);
   const withLinks = linkifyUrls(escaped);
   const withHashtags = replaceOutsideLinks(
@@ -63,7 +136,10 @@ function highlightHtml(text = '') {
     /#([\p{L}\p{N}_-]+)(?=$|[^\p{L}\p{N}_-])/gu,
     '<span class="inline-hashtag">#$1</span>',
   );
-  return withHashtags.replace(/(&lt;\/?)([a-zA-Z0-9-]+)([^&]*?)(&gt;)/g, (_, open, tag, attrs, close) => {
+  const withDates = Array.isArray(dateRegexes) && dateRegexes.length
+    ? dateRegexes.reduce((prev, regex) => replaceOutsideLinks(prev, regex, (match) => `<span class="inline-date">${capitalizeMonths(match)}</span>`), withHashtags)
+    : withHashtags;
+  return withDates.replace(/(&lt;\/?)([a-zA-Z0-9-]+)([^&]*?)(&gt;)/g, (_, open, tag, attrs, close) => {
     const highlightedAttrs = (attrs || '').replace(
       /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(\s*=\s*)("[^"]*"|[^\s"'<>]+)/g,
       '<span class="token attr-name">$1</span>$2<span class="token attr-value">$3</span>',
@@ -193,9 +269,15 @@ export function initTaskDescriptionEditor(details, queueSave, options = {}) {
 
   const save = typeof queueSave === 'function' ? queueSave : () => {};
   const lineRules = pickRules(options.lineRules);
+  const dateRegexes = buildDateRegexes(options.dateFormats);
 
   if (options.textColor) {
     details.style.setProperty('--details-text-color', options.textColor);
+  }
+  if (options.dateColor) {
+    details.style.setProperty('--inline-date-color', options.dateColor);
+    details.style.setProperty('--inline-date-background', hexToRgba(options.dateColor, 0.12));
+    details.style.setProperty('--inline-date-border', hexToRgba(options.dateColor, 0.28));
   }
 
   function syncDescription() {
@@ -203,7 +285,7 @@ export function initTaskDescriptionEditor(details, queueSave, options = {}) {
     if (text !== textarea.value) {
       textarea.value = text;
     }
-    preview.innerHTML = wrapLinesWithColors(highlightHtml(text), text, lineRules);
+    preview.innerHTML = wrapLinesWithColors(highlightHtml(text, dateRegexes), text, lineRules);
     return text;
   }
 

@@ -18,6 +18,8 @@ if (!$currentUser) {
 $errors = [];
 $successMessage = '';
 $lineRules = get_user_line_rules($db, (int)$currentUser['id']);
+$dateFormats = get_user_date_formats($db, (int)$currentUser['id']);
+$dateColor = get_user_date_color($db, (int)$currentUser['id']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_line_rules') {
     $rawRules = json_decode((string)($_POST['line_rules_json'] ?? '[]'), true);
@@ -25,15 +27,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
         $rawRules = [];
     }
     $sanitized = sanitize_line_rules($rawRules);
-    if (!$sanitized) {
-        $errors[] = 'Please add at least one valid line rule.';
+    $dateFormatsInput = (string)($_POST['date_formats'] ?? '');
+    $dateFormatsSanitized = sanitize_date_formats_input($dateFormatsInput);
+    $dateColorInput = (string)($_POST['date_color'] ?? '#FDA90D');
+
+    $savedRules = save_user_line_rules($db, (int)$currentUser['id'], $sanitized);
+    $savedFormats = save_user_date_formats($db, (int)$currentUser['id'], $dateFormatsSanitized);
+    $savedDateColor = save_user_date_color($db, (int)$currentUser['id'], $dateColorInput);
+
+    if (!$savedRules || !$savedFormats || !$savedDateColor) {
+        $errors[] = 'Unable to save editor settings. Please try again.';
     } else {
-        if (!save_user_line_rules($db, (int)$currentUser['id'], $sanitized)) {
-            $errors[] = 'Unable to save line rules. Please try again.';
-        } else {
-            $lineRules = get_user_line_rules($db, (int)$currentUser['id']);
-            $successMessage = 'Line rules saved.';
-        }
+        $lineRules = get_user_line_rules($db, (int)$currentUser['id']);
+        $dateFormats = get_user_date_formats($db, (int)$currentUser['id']);
+        $dateColor = get_user_date_color($db, (int)$currentUser['id']);
+        $successMessage = 'Editor settings saved.';
     }
 }
 
@@ -62,10 +70,23 @@ include __DIR__ . '/auth_header.php';
 <?php endif; ?>
 
 <section class="surface">
-  <h2 class="h5">Custom line rules</h2>
-  <p class="hint">Rules apply when a line begins with the exact prefix. Example: a prefix of <code>T </code> highlights task lines.</p>
+  <h2 class="h5">Editor settings</h2>
+  <p class="hint">Configure line highlighting rules and date detection in the task description editor.</p>
   <form method="post" id="line-rules-form" class="d-grid gap-3">
     <input type="hidden" name="action" value="save_line_rules">
+    <div>
+      <label class="form-label" for="date_color">Date highlight color</label>
+      <input type="color" class="form-control form-control-color" id="date_color" name="date_color" value="<?php echo htmlspecialchars($dateColor, ENT_QUOTES, 'UTF-8'); ?>">
+    </div>
+    <div>
+      <label class="form-label" for="date_formats">Date formats to highlight</label>
+      <textarea class="form-control" id="date_formats" name="date_formats" rows="4" placeholder="DD MMM YYYY&#10;DD/MM/YYYY"><?php echo htmlspecialchars(implode("\n", $dateFormats), ENT_QUOTES, 'UTF-8'); ?></textarea>
+      <p class="hint mb-0 mt-1">One format per line. Supported tokens: D, DD, M, MM, MMM, MMMM, YY, YYYY.</p>
+    </div>
+    <div>
+      <label class="form-label">Custom line rules</label>
+      <p class="hint mb-1">Rules apply when a line begins with the exact prefix. Example: a prefix of <code>T </code> highlights task lines.</p>
+    </div>
     <input type="hidden" id="line_rules_json" name="line_rules_json" value="<?php echo htmlspecialchars($lineRulesJson ?: '[]', ENT_QUOTES, 'UTF-8'); ?>">
     <div id="line-rules-container" class="d-grid gap-2"></div>
     <div class="d-flex flex-wrap gap-2">

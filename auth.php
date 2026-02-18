@@ -25,6 +25,12 @@ if (!in_array('last_name', $columns, true)) {
 if (!in_array('line_rules_json', $columns, true)) {
     $db->exec('ALTER TABLE users ADD COLUMN line_rules_json TEXT');
 }
+if (!in_array('date_formats_json', $columns, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN date_formats_json TEXT');
+}
+if (!in_array('date_color', $columns, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN date_color TEXT');
+}
 
 function get_default_line_rules(): array
 {
@@ -123,6 +129,119 @@ function save_user_line_rules(SQLite3 $db, int $userId, array $rules): bool
     $encoded = json_encode($sanitized, JSON_UNESCAPED_SLASHES);
     $stmt = $db->prepare('UPDATE users SET line_rules_json = :line_rules_json WHERE id = :id');
     $stmt->bindValue(':line_rules_json', $encoded, SQLITE3_TEXT);
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    return (bool)$result;
+}
+
+function get_default_date_formats(): array
+{
+    return [
+        'DD MMM YYYY',
+        'DD MMM YY',
+        'DD/MM/YYYY',
+        'DD/MM/YY',
+        'DD-MM-YYYY',
+        'DD-MM-YY',
+    ];
+}
+
+function sanitize_date_formats_input($input): array
+{
+    if (is_string($input)) {
+        $lines = preg_split('/\r\n|\r|\n/', $input);
+    } elseif (is_array($input)) {
+        $lines = $input;
+    } else {
+        $lines = [];
+    }
+
+    $cleaned = [];
+    foreach ($lines as $line) {
+        $format = trim((string)$line);
+        if ($format === '') {
+            continue;
+        }
+        if (!preg_match('/(DD|D|MMMM|MMM|MM|M|YYYY|YY)/', $format)) {
+            continue;
+        }
+        $cleaned[] = mb_substr($format, 0, 60);
+    }
+
+    $unique = array_values(array_unique($cleaned));
+    if (!$unique) {
+        return get_default_date_formats();
+    }
+    return $unique;
+}
+
+function decode_date_formats_from_storage(?string $value): array
+{
+    if (!$value) {
+        return get_default_date_formats();
+    }
+    $decoded = json_decode($value, true);
+    if (!is_array($decoded)) {
+        return get_default_date_formats();
+    }
+    return sanitize_date_formats_input($decoded);
+}
+
+function save_user_date_formats(SQLite3 $db, int $userId, array $formats): bool
+{
+    if ($userId <= 0) {
+        return false;
+    }
+    $sanitized = sanitize_date_formats_input($formats);
+    $encoded = json_encode(array_values($sanitized), JSON_UNESCAPED_SLASHES);
+    $stmt = $db->prepare('UPDATE users SET date_formats_json = :date_formats_json WHERE id = :id');
+    $stmt->bindValue(':date_formats_json', $encoded, SQLITE3_TEXT);
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    return (bool)$result;
+}
+
+function get_user_date_formats(SQLite3 $db, int $userId): array
+{
+    if ($userId <= 0) {
+        return get_default_date_formats();
+    }
+    $stmt = $db->prepare('SELECT date_formats_json FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+    return decode_date_formats_from_storage($row['date_formats_json'] ?? null);
+}
+
+function normalize_hex_color(string $color, string $default = '#FDA90D'): string
+{
+    $value = strtoupper(trim($color));
+    if (!preg_match('/^#[0-9A-F]{6}$/', $value)) {
+        return strtoupper($default);
+    }
+    return $value;
+}
+
+function get_user_date_color(SQLite3 $db, int $userId): string
+{
+    if ($userId <= 0) {
+        return '#FDA90D';
+    }
+    $stmt = $db->prepare('SELECT date_color FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+    return normalize_hex_color((string)($row['date_color'] ?? ''), '#FDA90D');
+}
+
+function save_user_date_color(SQLite3 $db, int $userId, string $color): bool
+{
+    if ($userId <= 0) {
+        return false;
+    }
+    $normalized = normalize_hex_color($color, '#FDA90D');
+    $stmt = $db->prepare('UPDATE users SET date_color = :date_color WHERE id = :id');
+    $stmt->bindValue(':date_color', $normalized, SQLITE3_TEXT);
     $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
     $result = $stmt->execute();
     return (bool)$result;

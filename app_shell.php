@@ -5,6 +5,9 @@ $initialRoute = $initialRoute ?? 'list';
 $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
 $lineRules = is_array($lineRules ?? null) ? $lineRules : [];
 $lineRulesJson = json_encode($lineRules, JSON_UNESCAPED_SLASHES);
+$dateFormats = is_array($dateFormats ?? null) ? $dateFormats : [];
+$dateFormatsJson = json_encode($dateFormats, JSON_UNESCAPED_SLASHES);
+$dateColor = normalize_hex_color((string)($dateColor ?? '#FDA90D'), '#FDA90D');
 ?>
 <!doctype html>
 <html lang="en">
@@ -145,6 +148,8 @@ $lineRulesJson = json_encode($lineRules, JSON_UNESCAPED_SLASHES);
     window.OTODO_SERVER_AUTH = <?php echo $serverAuth ? 'true' : 'false'; ?>;
     window.OTODO_AUTH_GATE = 'app';
     window.OTODO_LINE_RULES = <?php echo $lineRulesJson ?: '[]'; ?>;
+    window.OTODO_DATE_FORMATS = <?php echo $dateFormatsJson ?: '[]'; ?>;
+    window.OTODO_DATE_COLOR = "<?php echo htmlspecialchars($dateColor, ENT_QUOTES); ?>";
   </script>
   <script src="/assets/bootstrap.bundle.min.js"></script>
   <script type="module" src="/assets/auth_offline.js"></script>

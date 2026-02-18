@@ -320,6 +320,9 @@ body.route-task #menu {
   min-height: 16rem;
   font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --details-text-color: #1f2937;
+  --inline-date-color: #fda90d;
+  --inline-date-background: rgba(253, 169, 13, 0.12);
+  --inline-date-border: rgba(253, 169, 13, 0.28);
 }
 
 .prism-editor__textarea,
@@ -426,6 +429,16 @@ body.route-task #menu {
   color: #6f42c1;
   background: rgba(111, 66, 193, 0.12);
   border: 1px solid rgba(111, 66, 193, 0.24);
+  border-radius: 999px;
+  padding: 0 0.32rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.inline-date {
+  color: var(--inline-date-color);
+  background: var(--inline-date-background);
+  border: 1px solid var(--inline-date-border);
   border-radius: 999px;
   padding: 0 0.32rem;
   display: inline-flex;

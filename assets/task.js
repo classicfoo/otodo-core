@@ -42,6 +42,8 @@ let autosaveTimeout = null;
 let navigateToList = null;
 let descriptionEditor = null;
 const customLineRules = Array.isArray(window.OTODO_LINE_RULES) ? window.OTODO_LINE_RULES : [];
+const customDateFormats = Array.isArray(window.OTODO_DATE_FORMATS) ? window.OTODO_DATE_FORMATS : [];
+const customDateColor = typeof window.OTODO_DATE_COLOR === 'string' ? window.OTODO_DATE_COLOR : '#FDA90D';
 
 function showToast(message) {
   toast.textContent = message;
@@ -301,6 +303,8 @@ export async function initTaskView(options = {}) {
   if (descriptionEditorRoot) {
     descriptionEditor = initTaskDescriptionEditor(descriptionEditorRoot, scheduleAutosave, {
       lineRules: customLineRules,
+      dateFormats: customDateFormats,
+      dateColor: customDateColor,
     });
   }
 
