@@ -6,7 +6,7 @@ $isCompletedView = $taskFilter === 'completed';
 <nav class="app-nav">
   <div class="nav-row">
     <div class="nav-left">
-      <a class="app-brand" href="/index.php">Otodo</a>
+      <a class="app-brand" href="/index.php">Otodo Core</a>
       <div class="status">
         <span id="offline-indicator" class="badge offline hidden">Offline</span>
         <span id="sync-indicator" class="badge sync hidden">0 pending</span>

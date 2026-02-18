@@ -16,14 +16,14 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>" />
-  <title>Otodo</title>
+  <title>Otodo Core</title>
   <link rel="stylesheet" href="/assets/bootstrap.min.css" />
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
 <body class="bg-light page-index <?php echo $routeClass; ?>">
   <nav class="navbar navbar-light bg-white mb-4" id="list-navbar">
     <div class="container d-flex justify-content-between align-items-center">
-      <a href="/index.php" class="navbar-brand mb-0 h1 text-decoration-none">Otodo</a>
+      <a href="/index.php" class="navbar-brand mb-0 h1 text-decoration-none">Otodo Core</a>
       <div class="d-flex align-items-center header-actions ms-auto">
         <div class="task-search" id="task-search" aria-expanded="false">
           <button class="search-toggle" type="button" id="task-search-toggle" aria-label="Search tasks">
@@ -44,7 +44,7 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
 
   <nav class="navbar navbar-light bg-white mb-4" id="task-navbar">
     <div class="container d-flex justify-content-between align-items-center">
-      <a href="/index.php" class="navbar-brand text-decoration-none">Otodo</a>
+      <a href="/index.php" class="navbar-brand text-decoration-none">Otodo Core</a>
       <div class="d-flex align-items-center gap-2">
         <span id="offline-indicator" class="badge bg-danger-subtle text-danger hidden">Offline</span>
         <a href="/login.php" id="sync-login-top" class="badge bg-warning-subtle text-warning-emphasis text-decoration-none hidden">Sign in to sync</a>
