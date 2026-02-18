@@ -187,6 +187,8 @@ $currentUser = $currentUser ?? null;
           </p>
           <div class="menu-card">
             <?php if ($currentUser): ?>
+              <a class="menu-item" href="/index.php">Active tasks</a>
+              <a class="menu-item" href="/settings.php">Settings</a>
               <form method="post" class="menu-action" data-offline-logout="true">
                 <input type="hidden" name="action" value="logout">
                 <button type="submit">Logout</button>

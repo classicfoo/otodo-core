@@ -22,6 +22,111 @@ if (!in_array('first_name', $columns, true)) {
 if (!in_array('last_name', $columns, true)) {
     $db->exec('ALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT ""');
 }
+if (!in_array('line_rules_json', $columns, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN line_rules_json TEXT');
+}
+
+function get_default_line_rules(): array
+{
+    return [
+        ['prefix' => 'T ', 'label' => 'Task', 'color' => '#1D4ED8', 'className' => 'code-line-task'],
+        ['prefix' => 'N ', 'label' => 'Note', 'color' => '#1E7A3E', 'className' => 'code-line-note'],
+        ['prefix' => 'M ', 'label' => 'Milestone', 'color' => '#800000', 'className' => 'code-line-milestone'],
+        ['prefix' => '# ', 'label' => 'Heading', 'color' => '#212529', 'weight' => '700', 'className' => 'code-line-heading'],
+        ['prefix' => 'X ', 'label' => 'Done', 'color' => '#6C757D', 'className' => 'code-line-done'],
+    ];
+}
+
+function sanitize_line_rules($rules): array
+{
+    if (!is_array($rules)) {
+        return [];
+    }
+
+    $cleaned = [];
+    foreach ($rules as $rule) {
+        if (!is_array($rule)) {
+            continue;
+        }
+        $prefix = isset($rule['prefix']) ? (string)$rule['prefix'] : '';
+        if (trim($prefix) === '') {
+            continue;
+        }
+        $label = isset($rule['label']) ? trim((string)$rule['label']) : '';
+        $color = isset($rule['color']) ? strtoupper(trim((string)$rule['color'])) : '';
+        if ($color !== '' && !preg_match('/^#[0-9A-F]{6}$/', $color)) {
+            $color = '';
+        }
+        $weight = isset($rule['weight']) ? (string)$rule['weight'] : '';
+        if ($weight !== '' && !in_array($weight, ['400', '700'], true)) {
+            $weight = '';
+        }
+        $className = isset($rule['className']) ? trim((string)$rule['className']) : '';
+        if ($className !== '' && !preg_match('/^[A-Za-z0-9_-]+$/', $className)) {
+            $className = '';
+        }
+
+        $entry = ['prefix' => $prefix];
+        if ($label !== '') {
+            $entry['label'] = $label;
+        }
+        if ($color !== '') {
+            $entry['color'] = $color;
+        }
+        if ($weight !== '') {
+            $entry['weight'] = $weight;
+        }
+        if ($className !== '') {
+            $entry['className'] = $className;
+        }
+
+        $cleaned[] = $entry;
+        if (count($cleaned) >= 25) {
+            break;
+        }
+    }
+
+    return $cleaned;
+}
+
+function decode_line_rules_from_storage(?string $raw): array
+{
+    $decoded = json_decode((string)$raw, true);
+    $rules = sanitize_line_rules($decoded);
+    if (!$rules) {
+        return get_default_line_rules();
+    }
+    return $rules;
+}
+
+function get_user_line_rules(SQLite3 $db, int $userId): array
+{
+    if ($userId <= 0) {
+        return get_default_line_rules();
+    }
+    $stmt = $db->prepare('SELECT line_rules_json FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+    return decode_line_rules_from_storage($row['line_rules_json'] ?? null);
+}
+
+function save_user_line_rules(SQLite3 $db, int $userId, array $rules): bool
+{
+    if ($userId <= 0) {
+        return false;
+    }
+    $sanitized = sanitize_line_rules($rules);
+    if (!$sanitized) {
+        $sanitized = get_default_line_rules();
+    }
+    $encoded = json_encode($sanitized, JSON_UNESCAPED_SLASHES);
+    $stmt = $db->prepare('UPDATE users SET line_rules_json = :line_rules_json WHERE id = :id');
+    $stmt->bindValue(':line_rules_json', $encoded, SQLITE3_TEXT);
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    return (bool)$result;
+}
 
 function handle_register(SQLite3 $db, string $email, string $firstName, string $lastName, string $password): array
 {

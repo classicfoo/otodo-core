@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 $initialRoute = $initialRoute ?? 'list';
 $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
+$lineRules = is_array($lineRules ?? null) ? $lineRules : [];
+$lineRulesJson = json_encode($lineRules, JSON_UNESCAPED_SLASHES);
 ?>
 <!doctype html>
 <html lang="en">
@@ -68,6 +70,7 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
       <div class="list-group">
         <a href="/index.php" id="menu-view-active" class="list-group-item list-group-item-action" <?php echo $taskFilter === 'active' ? 'aria-current="page"' : ''; ?>>Active Tasks</a>
         <a href="/index.php?view=completed" id="menu-view-completed" class="list-group-item list-group-item-action" <?php echo $taskFilter === 'completed' ? 'aria-current="page"' : ''; ?>>Completed Tasks</a>
+        <a href="/settings.php" class="list-group-item list-group-item-action">Settings</a>
         <button type="button" class="list-group-item list-group-item-action text-start" id="clear-cache-btn">Clear cache</button>
         <form method="post" class="list-group-item list-group-item-action p-0" data-offline-logout="true">
           <input type="hidden" name="action" value="logout">
@@ -141,6 +144,7 @@ $routeClass = $initialRoute === 'task' ? 'route-task' : 'route-list';
     window.OTODO_CSRF = "<?php echo htmlspecialchars($csrfToken, ENT_QUOTES); ?>";
     window.OTODO_SERVER_AUTH = <?php echo $serverAuth ? 'true' : 'false'; ?>;
     window.OTODO_AUTH_GATE = 'app';
+    window.OTODO_LINE_RULES = <?php echo $lineRulesJson ?: '[]'; ?>;
   </script>
   <script src="/assets/bootstrap.bundle.min.js"></script>
   <script type="module" src="/assets/auth_offline.js"></script>

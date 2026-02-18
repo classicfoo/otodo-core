@@ -41,6 +41,7 @@ let ready = false;
 let autosaveTimeout = null;
 let navigateToList = null;
 let descriptionEditor = null;
+const customLineRules = Array.isArray(window.OTODO_LINE_RULES) ? window.OTODO_LINE_RULES : [];
 
 function showToast(message) {
   toast.textContent = message;
@@ -298,7 +299,9 @@ export async function initTaskView(options = {}) {
   deleteButton.addEventListener('click', handleDelete);
 
   if (descriptionEditorRoot) {
-    descriptionEditor = initTaskDescriptionEditor(descriptionEditorRoot, scheduleAutosave);
+    descriptionEditor = initTaskDescriptionEditor(descriptionEditorRoot, scheduleAutosave, {
+      lineRules: customLineRules,
+    });
   }
 
   registerAutosaveInput(titleInput, ['input']);

@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logou
 
 $currentUser = current_user();
 $serverAuth = (bool)$currentUser;
+$lineRules = $currentUser ? get_user_line_rules($db, (int)$currentUser['id']) : get_default_line_rules();
 
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
