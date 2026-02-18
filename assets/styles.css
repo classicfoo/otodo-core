@@ -343,7 +343,9 @@ body.route-task #menu {
   color: transparent;
   caret-color: var(--details-text-color);
   overflow: auto;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   outline: none;
   z-index: 1;
 }
@@ -362,7 +364,9 @@ body.route-task #menu {
   position: relative;
   margin: 0;
   pointer-events: none;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   overflow: auto;
   padding: 0.75rem;
   min-height: 100%;
