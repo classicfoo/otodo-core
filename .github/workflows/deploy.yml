@@ -3,7 +3,7 @@ name: Deploy to InfinityFree (FTP)
 on:
   push:
     branches:
-      - feature/port-prism-description-editor
+      - prod
   workflow_dispatch:
 
 jobs:
@@ -24,7 +24,8 @@ jobs:
           FTP_DIR: ${{ secrets.FTP_DIR }}
         run: |
           set -euo pipefail
-          lftp -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST <<EOF
+          test -n "$FTP_DIR"
+          lftp -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST <<EOF2
           set ftp:ssl-allow no
           set net:timeout 20
           set net:max-retries 2
@@ -32,9 +33,15 @@ jobs:
             mirror -R --verbose --delete --no-perms \
             --exclude-glob node_modules/** \
             --exclude-glob .env \
+            --exclude-glob *.sqlite \
+            --exclude-glob *.sqlite3 \
+            --exclude-glob storage/*.sqlite \
+            --exclude-glob storage/*.sqlite3 \
             --exclude .git/ \
             --exclude .github/ \
             --exclude data/ \
             ./ "$FTP_DIR"
+          cd "$FTP_DIR"
+          cls -la
           quit
-          EOF
+          EOF2
