@@ -28,6 +28,8 @@ const state = {
 let listFilter = 'active';
 let dueOverlay = null;
 let activeDueTaskId = null;
+let contextMenu = null;
+let contextTask = null;
 
 function ensureDueOverlay() {
   if (dueOverlay) return dueOverlay;
@@ -102,6 +104,28 @@ function openDueOverlay(badge, taskId) {
       overlay.overlay.classList.remove('calendar-only');
     }
   });
+}
+
+function isoDateFromToday(offsetDays) {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeDueIso(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const match = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match && match[1]) return match[1];
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return '';
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function setListFilter(nextFilter) {
@@ -297,6 +321,7 @@ function createRow(task) {
   const dueBadge = row.querySelector('.due-date-badge');
   if (dueBadge) {
     dueBadge.addEventListener('click', (event) => {
+      if (window.matchMedia('(pointer: fine)').matches) return;
       event.preventDefault();
       event.stopPropagation();
       openDueOverlay(dueBadge, row.dataset.id);
@@ -327,6 +352,8 @@ function updateRow(task) {
   }
   row.href = `${taskUrl.pathname}${taskUrl.search}`;
   row.dataset.searchText = task.title.toLowerCase();
+  row.dataset.dueDate = task.due_date || '';
+  row.dataset.priority = (task.priority || 'none').toLowerCase();
   const due = dueStatus(task.due_date);
   const dueBadge = row.querySelector('.due-date-badge');
   if (dueBadge) {
@@ -381,6 +408,141 @@ async function updateTaskDueDate(taskId, nextDate) {
     console.error(error);
     showToast('Due date not saved');
   }
+}
+
+async function updateTaskPriority(taskId, nextPriority) {
+  if (!taskId) return;
+  const task = state.tasks.get(taskId);
+  if (!task) return;
+  const normalized = String(nextPriority || 'none').toLowerCase();
+  if (!['none', 'low', 'med', 'high'].includes(normalized)) return;
+  if ((task.priority || 'none').toLowerCase() === normalized) return;
+  const updated = {
+    ...task,
+    priority: normalized,
+    updated_at: nowIso(),
+  };
+  state.tasks.set(task.id, updated);
+  refreshList();
+  try {
+    await putTask(updated);
+    await addOutboxOp({
+      op_id: crypto.randomUUID(),
+      client_id: state.clientId,
+      type: 'upsert',
+      task: updated,
+    });
+    triggerSync();
+  } catch (error) {
+    console.error(error);
+    showToast('Priority not saved');
+  }
+}
+
+async function applyDueShortcut(taskId, shortcut) {
+  if (!taskId) return;
+  if (shortcut === 'today') {
+    await updateTaskDueDate(taskId, isoDateFromToday(0));
+    return;
+  }
+  if (shortcut === 'tomorrow') {
+    await updateTaskDueDate(taskId, isoDateFromToday(1));
+    return;
+  }
+  if (shortcut === 'next-week') {
+    await updateTaskDueDate(taskId, isoDateFromToday(7));
+    return;
+  }
+  if (shortcut === 'clear') {
+    await updateTaskDueDate(taskId, null);
+  }
+}
+
+function ensureContextMenu() {
+  if (contextMenu) return contextMenu;
+  const menu = document.createElement('div');
+  menu.className = 'task-context-menu hidden';
+  menu.innerHTML = `
+    <div class="context-header">Quick edit</div>
+    <div class="context-group" data-group="due">
+      <div class="context-label">Due date</div>
+      <button type="button" data-action="due" data-value="today">Today <span class="badge bg-success-subtle text-success">Today</span></button>
+      <button type="button" data-action="due" data-value="tomorrow">Tomorrow <span class="badge bg-primary-subtle text-primary">Tomorrow</span></button>
+      <button type="button" data-action="due" data-value="next-week">Next week <span class="badge bg-primary-subtle text-primary">Later</span></button>
+      <button type="button" data-action="due" data-value="clear">No due date</button>
+    </div>
+    <div class="context-group" data-group="priority">
+      <div class="context-label">Priority</div>
+      <button type="button" data-action="priority" data-value="high">High</button>
+      <button type="button" data-action="priority" data-value="med">Medium</button>
+      <button type="button" data-action="priority" data-value="low">Low</button>
+      <button type="button" data-action="priority" data-value="none">None</button>
+    </div>
+  `;
+  pageBody.appendChild(menu);
+  contextMenu = menu;
+  return menu;
+}
+
+function hideContextMenu() {
+  if (!contextMenu) return;
+  contextMenu.classList.add('hidden');
+  contextTask = null;
+}
+
+function setContextMode(mode) {
+  if (!contextMenu) return;
+  const header = contextMenu.querySelector('.context-header');
+  if (header) {
+    header.textContent = mode === 'priority' ? 'Set priority' : 'Set due date';
+  }
+  contextMenu.dataset.mode = mode;
+  contextMenu.querySelectorAll('.context-group').forEach((group) => {
+    group.classList.toggle('hidden', group.dataset.group !== mode);
+  });
+}
+
+function setActiveOption(group, value) {
+  if (!contextMenu) return;
+  contextMenu.querySelectorAll(`.context-group[data-group="${group}"] button`).forEach((button) => {
+    button.classList.toggle('active', button.dataset.value === value);
+  });
+}
+
+function updateContextActiveOptions(taskEl) {
+  const priorityValue = String(taskEl?.dataset?.priority || 'none').toLowerCase();
+  setActiveOption('priority', priorityValue);
+
+  const dueDate = normalizeDueIso(taskEl?.dataset?.dueDate || '');
+  let dueChoice = '';
+  if (!dueDate) {
+    dueChoice = 'clear';
+  } else if (dueDate === isoDateFromToday(0)) {
+    dueChoice = 'today';
+  } else if (dueDate === isoDateFromToday(1)) {
+    dueChoice = 'tomorrow';
+  } else if (dueDate === isoDateFromToday(7)) {
+    dueChoice = 'next-week';
+  }
+  setActiveOption('due', dueChoice);
+}
+
+function showContextMenu(taskEl, x, y, mode) {
+  const menu = ensureContextMenu();
+  contextTask = taskEl;
+  setContextMode(mode);
+  updateContextActiveOptions(taskEl);
+  menu.classList.remove('hidden');
+  menu.style.left = '0px';
+  menu.style.top = '0px';
+  const rect = menu.getBoundingClientRect();
+  const padding = 8;
+  const maxLeft = window.innerWidth - rect.width - padding;
+  const maxTop = window.innerHeight - rect.height - padding;
+  const left = Math.min(Math.max(padding, x), Math.max(padding, maxLeft));
+  const top = Math.min(Math.max(padding, y), Math.max(padding, maxTop));
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
 }
 
 function refreshList() {
@@ -518,6 +680,47 @@ export async function initListView() {
     const row = event.target.closest('.task-row');
     if (!row) return;
     if (event.target.closest('.star-toggle')) return;
+  });
+
+  const quickEditMenu = ensureContextMenu();
+  quickEditMenu.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-action]');
+    if (!button || !contextTask) return;
+    event.preventDefault();
+    const taskId = contextTask.dataset.id;
+    hideContextMenu();
+    if (!taskId) return;
+    if (button.dataset.action === 'priority') {
+      void updateTaskPriority(taskId, button.dataset.value);
+      return;
+    }
+    if (button.dataset.action === 'due') {
+      void applyDueShortcut(taskId, button.dataset.value);
+    }
+  });
+
+  document.addEventListener('contextmenu', (event) => {
+    const targetDue = event.target.closest('.due-date-badge');
+    const targetPriority = event.target.closest('.priority-text');
+    const targetGroup = targetDue ? 'due' : (targetPriority ? 'priority' : null);
+    if (!targetGroup) return;
+    const row = event.target.closest('.task-row');
+    if (!row) return;
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    event.preventDefault();
+    showContextMenu(row, event.clientX, event.clientY, targetGroup);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!contextMenu) return;
+    if (contextMenu.contains(event.target)) return;
+    hideContextMenu();
+  });
+
+  window.addEventListener('scroll', hideContextMenu, true);
+  window.addEventListener('resize', hideContextMenu);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') hideContextMenu();
   });
 
   window.addEventListener('online', triggerSync);

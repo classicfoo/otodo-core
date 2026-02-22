@@ -937,6 +937,63 @@ body.route-task #menu {
   border: 1px solid #e5d4ff;
 }
 
+.page-index .task-context-menu {
+  position: fixed;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  z-index: 1080;
+  min-width: 220px;
+  overflow: hidden;
+}
+
+.page-index .task-context-menu .context-header {
+  padding: 0.5rem 0.75rem;
+  background-color: #f8f9fa;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.page-index .task-context-menu .context-group + .context-group {
+  border-top: 1px solid #e9ecef;
+}
+
+.page-index .task-context-menu .context-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  padding: 0.35rem 0.75rem 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.page-index .task-context-menu button {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  background: transparent;
+  font-size: 0.95rem;
+}
+
+.page-index .task-context-menu button:hover,
+.page-index .task-context-menu button:focus {
+  background-color: #f1f3f5;
+}
+
+.page-index .task-context-menu button:focus-visible {
+  outline: 2px solid #0a2a66;
+  outline-offset: -2px;
+}
+
+.page-index .task-context-menu button .badge {
+  float: right;
+}
+
+.page-index .task-context-menu button.active {
+  background-color: #e7f1ff;
+}
+
 .page-index .task-search {
   display: inline-flex;
   align-items: center;
