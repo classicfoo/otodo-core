@@ -14,6 +14,28 @@ ftp_user="${FTP_USER:-}"
 ftp_pass="${FTP_PASS:-}"
 ftp_dir="${FTP_DIR:-}"
 ftp_ssl_mode="${FTP_SSL_MODE:-off}"
+max_backups="${MAX_BACKUPS:-3}"
+
+prune_old_backups() {
+  local base_name="${db_name%.sqlite}"
+  local pattern="$backup_dir/${base_name}-"*.sqlite
+  local backups=()
+  local backup_path=""
+
+  shopt -s nullglob
+  backups=($pattern)
+  shopt -u nullglob
+
+  if (( ${#backups[@]} <= max_backups )); then
+    return
+  fi
+
+  mapfile -t backups < <(printf '%s\n' "${backups[@]}" | sort -r)
+
+  for backup_path in "${backups[@]:max_backups}"; do
+    rm -f "$backup_path" "$backup_path-wal" "$backup_path-shm"
+  done
+}
 
 download_remote_database() {
   local base_name="${db_name%.sqlite}"
@@ -93,6 +115,7 @@ get "$remote_shm_path" -o "$local_shm_path"
 bye
 EOF
 
+  prune_old_backups
   echo "Remote database backup downloaded to: $local_db_path"
 }
 
@@ -118,6 +141,7 @@ backup_local_database() {
     fi
   fi
 
+  prune_old_backups
   echo "Local database backup created at: $backup_path"
 }
 
