@@ -312,43 +312,50 @@ body.route-task #menu {
   color: var(--muted);
 }
 
-.editor-toggle {
-  display: inline-flex;
-  gap: 0.5rem;
-  padding: 0.3rem;
-  margin-bottom: 0.85rem;
+.editor-shell {
   border: 1px solid var(--border);
-  border-radius: 0.85rem;
+  border-radius: 0.75rem;
   background: #f8fafc;
+  overflow: hidden;
+}
+
+.editor-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.625rem 0.875rem 0;
+  background: transparent;
+  border-bottom: 1px solid rgba(203, 213, 225, 0.8);
 }
 
 .editor-toggle__button {
   border: 0;
-  border-radius: 0.65rem;
-  padding: 0.5rem 0.9rem;
+  border-radius: 0;
+  padding: 0 0 0.625rem;
   background: transparent;
-  color: #475569;
-  font-size: 0.9rem;
-  font-weight: 600;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
   line-height: 1;
   cursor: pointer;
-  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  border-bottom: 2px solid transparent;
+  transition: color 120ms ease, border-color 120ms ease;
 }
 
 .editor-toggle__button:hover {
-  background: rgba(148, 163, 184, 0.14);
   color: #0f172a;
 }
 
 .editor-toggle__button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.28);
+  color: #0f172a;
+  border-bottom-color: rgba(15, 23, 42, 0.4);
 }
 
 .editor-toggle__button.is-active {
-  background: #0f172a;
-  color: #fff;
-  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+  font-weight: 700;
+  border-bottom-color: #0f172a;
 }
 
 .editor-panel-stack {
@@ -357,9 +364,9 @@ body.route-task #menu {
 
 .prism-editor {
   position: relative;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background-color: #f8fafc;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
   min-height: 16rem;
   font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --details-text-color: #1f2937;
@@ -384,7 +391,7 @@ body.route-task #menu {
   resize: none;
   border: none;
   margin: 0;
-  padding: 0.75rem;
+  padding: 1rem 1.1rem;
   background: transparent;
   color: transparent;
   caret-color: var(--details-text-color);
@@ -414,7 +421,7 @@ body.route-task #menu {
   overflow-wrap: anywhere;
   word-break: break-word;
   overflow: auto;
-  padding: 0.75rem;
+  padding: 1rem 1.1rem;
   min-height: 100%;
   z-index: 0;
 }

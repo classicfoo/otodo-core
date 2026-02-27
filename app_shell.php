@@ -128,34 +128,35 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
           <label class="form-check-label" for="edit-star">Star this task</label>
         </div>
         <div class="mb-3">
-          <label class="form-label" for="edit-description">Description</label>
-          <div class="editor-toggle" role="group" aria-label="Description view">
-            <button
-              type="button"
-              class="editor-toggle__button is-active"
-              id="description-toggle"
-              data-editor-target="description"
-              aria-pressed="true"
-            >Description</button>
-            <button
-              type="button"
-              class="editor-toggle__button"
-              id="archive-toggle"
-              data-editor-target="archive"
-              aria-pressed="false"
-            >Archive</button>
-          </div>
-          <div class="editor-panel-stack">
-            <div class="editor-panel" id="description-panel">
-              <div id="edit-description-editor" class="prism-editor" data-language="html">
-                <textarea id="edit-description" name="description" class="prism-editor__textarea" spellcheck="false"></textarea>
-                <pre class="prism-editor__preview"><code class="language-markup"></code></pre>
-              </div>
+          <div class="editor-shell">
+            <div class="editor-toggle" role="group" aria-label="Task details view">
+              <button
+                type="button"
+                class="editor-toggle__button is-active"
+                id="description-toggle"
+                data-editor-target="description"
+                aria-pressed="true"
+              >Description</button>
+              <button
+                type="button"
+                class="editor-toggle__button"
+                id="archive-toggle"
+                data-editor-target="archive"
+                aria-pressed="false"
+              >Archive</button>
             </div>
-            <div class="editor-panel hidden" id="archive-panel">
-              <div id="edit-archive-editor" class="prism-editor" data-language="html">
-                <textarea id="edit-archive" name="description_archive" class="prism-editor__textarea" spellcheck="false"></textarea>
-                <pre class="prism-editor__preview"><code class="language-markup"></code></pre>
+            <div class="editor-panel-stack">
+              <div class="editor-panel" id="description-panel">
+                <div id="edit-description-editor" class="prism-editor" data-language="html">
+                  <textarea id="edit-description" name="description" class="prism-editor__textarea" spellcheck="false"></textarea>
+                  <pre class="prism-editor__preview"><code class="language-markup"></code></pre>
+                </div>
+              </div>
+              <div class="editor-panel hidden" id="archive-panel">
+                <div id="edit-archive-editor" class="prism-editor" data-language="html">
+                  <textarea id="edit-archive" name="description_archive" class="prism-editor__textarea" spellcheck="false"></textarea>
+                  <pre class="prism-editor__preview"><code class="language-markup"></code></pre>
+                </div>
               </div>
             </div>
           </div>
