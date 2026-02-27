@@ -1,7 +1,9 @@
 # Agent Workflow
 
 - After making code changes, commit them and push to the current git branch by default.
-- Before pushing to a GitHub repo on Linux, back up the project database to `/home/michael/Documents/Backups/[project-folder]`. For this repo, run `scripts/backup_database.sh` so `data/otodo.sqlite` is backed up to `/home/michael/Documents/Backups/otodo-core/`.
+- Website for this repo: `https://otodo-core.infinityfree.me`. If the website address is not known for a repo, ask the user and store it in `AGENTS.md`.
+- Before pushing to a GitHub repo on Linux, back up the project database to `/home/michael/Documents/Backups/[project-folder]`. For this repo, run `scripts/backup_database.sh`.
+- For InfinityFree-hosted backups, use FTP/FTPS, not SFTP. Remote backups should download the deployed database from `${FTP_DIR}/data/otodo.sqlite` into `/home/michael/Documents/Backups/otodo-core/` using env vars such as `BACKUP_SOURCE=remote`, `FTP_HOST`, `FTP_USER`, `FTP_PASS`, and `FTP_DIR`.
 - If the user explicitly asks not to commit or not to push, follow the user request.
 - Keep commits focused and use clear, descriptive commit messages.
 - Whenever creating a new branch, update the branch name in `.github/workflows/deploy.yml` so deploys track that branch.
