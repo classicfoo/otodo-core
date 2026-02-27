@@ -67,6 +67,7 @@ function ensure_db(): SQLite3 {
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         description TEXT NULL,
+        description_archive TEXT NULL,
         priority TEXT NOT NULL,
         start_date TEXT NULL,
         due_date TEXT NULL,
@@ -90,6 +91,9 @@ function ensure_db(): SQLite3 {
     }
     if (!isset($columns['description'])) {
         $db->exec('ALTER TABLE tasks ADD COLUMN description TEXT;');
+    }
+    if (!isset($columns['description_archive'])) {
+        $db->exec('ALTER TABLE tasks ADD COLUMN description_archive TEXT;');
     }
     return $db;
 }
@@ -135,6 +139,7 @@ if ($action === 'upsert') {
     $id = isset($payload['id']) ? trim((string)$payload['id']) : '';
     $title = trim((string)($payload['title'] ?? ''));
     $description = (string)($payload['description'] ?? '');
+    $descriptionArchive = (string)($payload['description_archive'] ?? '');
     $priority = (string)($payload['priority'] ?? 'low');
     $startDate = $payload['start_date'] ?? null;
     $dueDate = $payload['due_date'] ?? null;
@@ -159,11 +164,12 @@ if ($action === 'upsert') {
     $createdAt = $row['created_at'] ?? iso_now();
     $updatedAt = iso_now();
 
-    $stmt = $db->prepare('INSERT INTO tasks (id, title, description, priority, start_date, due_date, completed, starred, created_at, updated_at)
-        VALUES (:id, :title, :description, :priority, :start_date, :due_date, :completed, :starred, :created_at, :updated_at)
+    $stmt = $db->prepare('INSERT INTO tasks (id, title, description, description_archive, priority, start_date, due_date, completed, starred, created_at, updated_at)
+        VALUES (:id, :title, :description, :description_archive, :priority, :start_date, :due_date, :completed, :starred, :created_at, :updated_at)
         ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         description = excluded.description,
+        description_archive = excluded.description_archive,
         priority = excluded.priority,
         start_date = excluded.start_date,
         due_date = excluded.due_date,
@@ -173,6 +179,7 @@ if ($action === 'upsert') {
     $stmt->bindValue(':id', $id, SQLITE3_TEXT);
     $stmt->bindValue(':title', $title, SQLITE3_TEXT);
     $stmt->bindValue(':description', $description, SQLITE3_TEXT);
+    $stmt->bindValue(':description_archive', $descriptionArchive, SQLITE3_TEXT);
     $stmt->bindValue(':priority', $priority, SQLITE3_TEXT);
     $stmt->bindValue(':start_date', $startDate ?: null, SQLITE3_TEXT);
     $stmt->bindValue(':due_date', $dueDate ?: null, SQLITE3_TEXT);
@@ -187,6 +194,7 @@ if ($action === 'upsert') {
             'id' => $id,
             'title' => $title,
             'description' => $description,
+            'description_archive' => $descriptionArchive,
             'priority' => $priority,
             'start_date' => $startDate ?: null,
             'due_date' => $dueDate ?: null,
@@ -251,6 +259,7 @@ if ($action === 'sync_outbox') {
             $id = trim((string)($task['id'] ?? ''));
             $title = trim((string)($task['title'] ?? ''));
             $description = (string)($task['description'] ?? '');
+            $descriptionArchive = (string)($task['description_archive'] ?? '');
             $priority = (string)($task['priority'] ?? 'low');
             $startDate = $task['start_date'] ?? null;
             $dueDate = $task['due_date'] ?? null;
@@ -268,11 +277,12 @@ if ($action === 'sync_outbox') {
                 // Existing is newer, skip.
             } else {
                 $createdAt = $row['created_at'] ?? ($task['created_at'] ?? iso_now());
-                $stmt = $db->prepare('INSERT INTO tasks (id, title, description, priority, start_date, due_date, completed, starred, created_at, updated_at)
-                    VALUES (:id, :title, :description, :priority, :start_date, :due_date, :completed, :starred, :created_at, :updated_at)
+                $stmt = $db->prepare('INSERT INTO tasks (id, title, description, description_archive, priority, start_date, due_date, completed, starred, created_at, updated_at)
+                    VALUES (:id, :title, :description, :description_archive, :priority, :start_date, :due_date, :completed, :starred, :created_at, :updated_at)
                     ON CONFLICT(id) DO UPDATE SET
                     title = excluded.title,
                     description = excluded.description,
+                    description_archive = excluded.description_archive,
                     priority = excluded.priority,
                     start_date = excluded.start_date,
                     due_date = excluded.due_date,
@@ -282,6 +292,7 @@ if ($action === 'sync_outbox') {
                 $stmt->bindValue(':id', $id, SQLITE3_TEXT);
                 $stmt->bindValue(':title', $title, SQLITE3_TEXT);
                 $stmt->bindValue(':description', $description, SQLITE3_TEXT);
+                $stmt->bindValue(':description_archive', $descriptionArchive, SQLITE3_TEXT);
                 $stmt->bindValue(':priority', $priority, SQLITE3_TEXT);
                 $stmt->bindValue(':start_date', $startDate ?: null, SQLITE3_TEXT);
                 $stmt->bindValue(':due_date', $dueDate ?: null, SQLITE3_TEXT);

@@ -10,7 +10,12 @@ const completedInput = document.getElementById('edit-completed');
 const priorityInput = document.getElementById('edit-priority');
 const starInput = document.getElementById('edit-star');
 const descriptionInput = document.getElementById('edit-description');
+const archiveInput = document.getElementById('edit-archive');
 const descriptionEditorRoot = document.getElementById('edit-description-editor');
+const archiveEditorRoot = document.getElementById('edit-archive-editor');
+const descriptionPanel = document.getElementById('description-panel');
+const archivePanel = document.getElementById('archive-panel');
+const editorToggleButtons = Array.from(document.querySelectorAll('[data-editor-target]'));
 const deleteButton = document.getElementById('delete-task');
 const missingTask = document.getElementById('missing-task');
 const offlineIndicator = document.getElementById('offline-indicator');
@@ -41,10 +46,12 @@ let ready = false;
 let autosaveTimeout = null;
 let navigateToList = null;
 let descriptionEditor = null;
+let archiveEditor = null;
 const customLineRules = Array.isArray(window.OTODO_LINE_RULES) ? window.OTODO_LINE_RULES : [];
 const customDateFormats = Array.isArray(window.OTODO_DATE_FORMATS) ? window.OTODO_DATE_FORMATS : [];
 const customDateColor = typeof window.OTODO_DATE_COLOR === 'string' ? window.OTODO_DATE_COLOR : '#FDA90D';
 const capitalizeSentences = window.OTODO_CAPITALIZE_SENTENCES !== false;
+let activeEditorPanel = 'description';
 
 function showToast(message) {
   toast.textContent = message;
@@ -87,6 +94,21 @@ function showMissingTask() {
 function showTaskForm() {
   form.classList.remove('hidden');
   missingTask.classList.add('hidden');
+}
+
+function setActiveEditorPanel(panelName) {
+  activeEditorPanel = panelName === 'archive' ? 'archive' : 'description';
+  if (descriptionPanel) {
+    descriptionPanel.classList.toggle('hidden', activeEditorPanel !== 'description');
+  }
+  if (archivePanel) {
+    archivePanel.classList.toggle('hidden', activeEditorPanel !== 'archive');
+  }
+  editorToggleButtons.forEach((button) => {
+    const isActive = button.dataset.editorTarget === activeEditorPanel;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
 }
 
 async function migrateStarStateForTask(loadedTask) {
@@ -132,6 +154,12 @@ function populateForm(loadedTask) {
       descriptionEditor.updateDescription();
     }
   }
+  if (archiveInput) {
+    archiveInput.value = loadedTask.description_archive || '';
+    if (archiveEditor && typeof archiveEditor.updateDescription === 'function') {
+      archiveEditor.updateDescription();
+    }
+  }
 }
 
 async function loadTask(id) {
@@ -155,10 +183,11 @@ function hasTaskChanges(updated) {
   if ((updated.starred || 0) !== (task.starred || 0)) return true;
   if (priorityInput && updated.priority !== task.priority) return true;
   if (descriptionInput && updated.description !== task.description) return true;
+  if (archiveInput && updated.description_archive !== (task.description_archive || '')) return true;
   return false;
 }
 
-function hasNonDescriptionChanges(updated) {
+function hasNonEditorChanges(updated) {
   if (!task) return false;
   if (updated.title !== task.title) return true;
   if ((updated.due_date || null) !== (task.due_date || null)) return true;
@@ -192,6 +221,9 @@ function buildUpdatedTask() {
   if (descriptionInput) {
     updated.description = descriptionInput.value || '';
   }
+  if (archiveInput) {
+    updated.description_archive = archiveInput.value || '';
+  }
   return updated;
 }
 
@@ -200,17 +232,19 @@ async function persistTaskChanges({ showToastOnSave = false, triggerSyncOnSave =
   const updated = buildUpdatedTask();
   if (!updated || !hasTaskChanges(updated)) return false;
   const descriptionChanged = descriptionInput && updated.description !== task.description;
-  const nonDescriptionChanged = hasNonDescriptionChanges(updated);
+  const archiveChanged = archiveInput && updated.description_archive !== (task.description_archive || '');
+  const editorContentChanged = descriptionChanged || archiveChanged;
+  const nonEditorChanged = hasNonEditorChanges(updated);
   await putTask(updated);
-  if (descriptionChanged) {
+  if (editorContentChanged) {
     await addOutboxOp({
-      op_id: `${buildOutboxKey(updated.id, 'description')}:${updated.updated_at}`,
+      op_id: `${buildOutboxKey(updated.id, 'details')}:${updated.updated_at}`,
       client_id: clientId,
       type: 'upsert',
       task: updated,
     });
   }
-  if (!descriptionChanged && nonDescriptionChanged) {
+  if (!editorContentChanged && nonEditorChanged) {
     await addOutboxOp({
       op_id: crypto.randomUUID(),
       client_id: clientId,
@@ -300,6 +334,11 @@ export async function initTaskView(options = {}) {
 
   form.addEventListener('submit', (event) => event.preventDefault());
   deleteButton.addEventListener('click', handleDelete);
+  editorToggleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      setActiveEditorPanel(button.dataset.editorTarget || 'description');
+    });
+  });
 
   if (descriptionEditorRoot) {
     descriptionEditor = initTaskDescriptionEditor(descriptionEditorRoot, scheduleAutosave, {
@@ -309,6 +348,15 @@ export async function initTaskView(options = {}) {
       capitalizeSentences,
     });
   }
+  if (archiveEditorRoot) {
+    archiveEditor = initTaskDescriptionEditor(archiveEditorRoot, scheduleAutosave, {
+      lineRules: customLineRules,
+      dateFormats: customDateFormats,
+      dateColor: customDateColor,
+      capitalizeSentences,
+    });
+  }
+  setActiveEditorPanel(activeEditorPanel);
 
   registerAutosaveInput(titleInput, ['input']);
   registerAutosaveInput(dueInput, ['input', 'change']);
