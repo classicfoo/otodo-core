@@ -9,8 +9,8 @@
   --danger: #dc2626;
   --success: #16a34a;
   --warning: #f59e0b;
-  --content-max-width: 900px;
-  --content-padding: clamp(16px, 4vw, 36px);
+  --content-max-width: 1180px;
+  --content-padding: clamp(12px, 2vw, 24px);
 }
 
 * {
