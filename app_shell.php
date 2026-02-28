@@ -8,6 +8,7 @@ $lineRulesJson = json_encode($lineRules, JSON_UNESCAPED_SLASHES);
 $dateFormats = is_array($dateFormats ?? null) ? $dateFormats : [];
 $dateFormatsJson = json_encode($dateFormats, JSON_UNESCAPED_SLASHES);
 $dateColor = normalize_hex_color((string)($dateColor ?? '#FDA90D'), '#FDA90D');
+$editorBackgroundColor = normalize_hex_color((string)($editorBackgroundColor ?? '#F8FAFC'), '#F8FAFC');
 $capitalizeSentences = (bool)($capitalizeSentences ?? true);
 ?>
 <!doctype html>
@@ -165,9 +166,10 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
                   <pre class="prism-editor__preview"><code class="language-markup"></code></pre>
                 </div>
               </div>
-              <div class="editor-panel hidden settings-panel" id="settings-panel">
+            <div class="editor-panel hidden settings-panel" id="settings-panel">
                 <div class="settings-grid">
                   <div class="settings-controls">
+                    <input type="color" id="editor-background-color" class="visually-hidden" value="<?php echo htmlspecialchars($editorBackgroundColor, ENT_QUOTES); ?>" />
                     <label class="slider-row" for="editor-hue">
                       <span>Hue</span>
                       <input id="editor-hue" type="range" min="0" max="360" value="210" />
@@ -186,7 +188,7 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
                   </div>
                   <div class="settings-swatch" id="editor-swatch" aria-hidden="true"></div>
                 </div>
-                <p class="settings-note mb-0">This changes the editor background only on this device.</p>
+                <p class="settings-note mb-0">This editor background is saved to your account and shared across your signed-in devices.</p>
               </div>
             </div>
           </div>
@@ -208,6 +210,7 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
     window.OTODO_LINE_RULES = <?php echo $lineRulesJson ?: '[]'; ?>;
     window.OTODO_DATE_FORMATS = <?php echo $dateFormatsJson ?: '[]'; ?>;
     window.OTODO_DATE_COLOR = "<?php echo htmlspecialchars($dateColor, ENT_QUOTES); ?>";
+    window.OTODO_EDITOR_BACKGROUND = "<?php echo htmlspecialchars($editorBackgroundColor, ENT_QUOTES); ?>";
     window.OTODO_CAPITALIZE_SENTENCES = <?php echo $capitalizeSentences ? 'true' : 'false'; ?>;
   </script>
   <script src="/assets/bootstrap.bundle.min.js"></script>

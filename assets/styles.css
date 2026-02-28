@@ -370,12 +370,13 @@ body.route-task #task-view > .container {
 
 .editor-panel-stack {
   position: relative;
+  background: var(--editor-panel-bg, #ffffff);
 }
 
 .editor-panel.settings-panel {
   min-height: 16rem;
   padding: 1rem 1.1rem 1.1rem;
-  background: rgba(255, 255, 255, 0.45);
+  background: transparent;
 }
 
 .settings-grid {

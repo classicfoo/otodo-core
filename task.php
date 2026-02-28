@@ -14,6 +14,7 @@ $serverAuth = (bool)$currentUser;
 $lineRules = $currentUser ? get_user_line_rules($db, (int)$currentUser['id']) : get_default_line_rules();
 $dateFormats = $currentUser ? get_user_date_formats($db, (int)$currentUser['id']) : get_default_date_formats();
 $dateColor = $currentUser ? get_user_date_color($db, (int)$currentUser['id']) : '#FDA90D';
+$editorBackgroundColor = $currentUser ? get_user_editor_background_color($db, (int)$currentUser['id']) : '#F8FAFC';
 $capitalizeSentences = $currentUser ? get_user_capitalize_sentences($db, (int)$currentUser['id']) : true;
 
 if (!isset($_SESSION['csrf_token'])) {

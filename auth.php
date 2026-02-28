@@ -31,6 +31,9 @@ if (!in_array('date_formats_json', $columns, true)) {
 if (!in_array('date_color', $columns, true)) {
     $db->exec('ALTER TABLE users ADD COLUMN date_color TEXT');
 }
+if (!in_array('editor_background_color', $columns, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN editor_background_color TEXT');
+}
 if (!in_array('capitalize_sentences', $columns, true)) {
     $db->exec('ALTER TABLE users ADD COLUMN capitalize_sentences INTEGER NOT NULL DEFAULT 1');
 }
@@ -245,6 +248,31 @@ function save_user_date_color(SQLite3 $db, int $userId, string $color): bool
     $normalized = normalize_hex_color($color, '#FDA90D');
     $stmt = $db->prepare('UPDATE users SET date_color = :date_color WHERE id = :id');
     $stmt->bindValue(':date_color', $normalized, SQLITE3_TEXT);
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    return (bool)$result;
+}
+
+function get_user_editor_background_color(SQLite3 $db, int $userId): string
+{
+    if ($userId <= 0) {
+        return '#F8FAFC';
+    }
+    $stmt = $db->prepare('SELECT editor_background_color FROM users WHERE id = :id');
+    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $result = $stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : null;
+    return normalize_hex_color((string)($row['editor_background_color'] ?? ''), '#F8FAFC');
+}
+
+function save_user_editor_background_color(SQLite3 $db, int $userId, string $color): bool
+{
+    if ($userId <= 0) {
+        return false;
+    }
+    $normalized = normalize_hex_color($color, '#F8FAFC');
+    $stmt = $db->prepare('UPDATE users SET editor_background_color = :editor_background_color WHERE id = :id');
+    $stmt->bindValue(':editor_background_color', $normalized, SQLITE3_TEXT);
     $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
     $result = $stmt->execute();
     return (bool)$result;

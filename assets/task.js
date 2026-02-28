@@ -21,6 +21,7 @@ const editorToggleButtons = Array.from(document.querySelectorAll('[data-editor-t
 const hueSlider = document.getElementById('editor-hue');
 const saturationSlider = document.getElementById('editor-saturation');
 const valueSlider = document.getElementById('editor-value');
+const editorBackgroundInput = document.getElementById('editor-background-color');
 const hueValue = document.getElementById('editor-hue-value');
 const saturationValue = document.getElementById('editor-saturation-value');
 const valueValue = document.getElementById('editor-value-value');
@@ -31,10 +32,13 @@ const offlineIndicator = document.getElementById('offline-indicator');
 const toast = document.getElementById('toast');
 
 const starStorageKey = 'otodo_starred_tasks';
-const editorColorStorageKey = 'otodo_editor_background_hsv';
 const taskUpdatedEvent = 'otodo-task-updated';
 const taskDeletedEvent = 'otodo-task-deleted';
 const defaultEditorBackground = { hue: 210, saturation: 33, value: 98 };
+const editorBackgroundFromServer = typeof window.OTODO_EDITOR_BACKGROUND === 'string'
+  ? window.OTODO_EDITOR_BACKGROUND
+  : '#F8FAFC';
+let editorBackgroundSaveTimeout = null;
 
 function loadStarState() {
   try {
@@ -141,39 +145,66 @@ function hsvToHex(hue, saturation, value) {
   return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
 }
 
-function loadEditorBackground() {
-  try {
-    const raw = localStorage.getItem(editorColorStorageKey);
-    if (!raw) return { ...defaultEditorBackground };
-    const parsed = JSON.parse(raw);
-    const hue = Number(parsed.hue);
-    const saturation = Number(parsed.saturation);
-    const value = Number(parsed.value);
-    if (
-      Number.isFinite(hue) && hue >= 0 && hue <= 360 &&
-      Number.isFinite(saturation) && saturation >= 0 && saturation <= 100 &&
-      Number.isFinite(value) && value >= 0 && value <= 100
-    ) {
-      return { hue, saturation, value };
-    }
-  } catch (error) {
-    console.error(error);
+function hexToHsv(hex) {
+  const normalized = String(hex || '').trim().replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return { ...defaultEditorBackground };
   }
-  return { ...defaultEditorBackground };
+  const red = parseInt(normalized.slice(0, 2), 16) / 255;
+  const green = parseInt(normalized.slice(2, 4), 16) / 255;
+  const blue = parseInt(normalized.slice(4, 6), 16) / 255;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const delta = max - min;
+  let hue = 0;
+
+  if (delta !== 0) {
+    if (max === red) {
+      hue = 60 * (((green - blue) / delta) % 6);
+    } else if (max === green) {
+      hue = 60 * (((blue - red) / delta) + 2);
+    } else {
+      hue = 60 * (((red - green) / delta) + 4);
+    }
+  }
+  if (hue < 0) hue += 360;
+
+  const saturation = max === 0 ? 0 : (delta / max) * 100;
+  const value = max * 100;
+  return {
+    hue: Math.round(hue),
+    saturation: Math.round(saturation),
+    value: Math.round(value),
+  };
 }
 
-function saveEditorBackground(hsv) {
-  try {
-    localStorage.setItem(editorColorStorageKey, JSON.stringify(hsv));
-  } catch (error) {
-    console.error(error);
+function mixHexColors(baseHex, targetHex, ratio) {
+  const base = String(baseHex || '').replace('#', '');
+  const target = String(targetHex || '').replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(base) || !/^[0-9a-fA-F]{6}$/.test(target)) {
+    return baseHex;
   }
+  const clampRatio = Math.max(0, Math.min(1, ratio));
+  const mixChannel = (start, end) => {
+    const value = Math.round(start + (end - start) * clampRatio);
+    return value.toString(16).padStart(2, '0');
+  };
+  const baseRed = parseInt(base.slice(0, 2), 16);
+  const baseGreen = parseInt(base.slice(2, 4), 16);
+  const baseBlue = parseInt(base.slice(4, 6), 16);
+  const targetRed = parseInt(target.slice(0, 2), 16);
+  const targetGreen = parseInt(target.slice(2, 4), 16);
+  const targetBlue = parseInt(target.slice(4, 6), 16);
+
+  return `#${mixChannel(baseRed, targetRed)}${mixChannel(baseGreen, targetGreen)}${mixChannel(baseBlue, targetBlue)}`;
 }
 
 function applyEditorBackground(hsv) {
   const hex = hsvToHex(hsv.hue, hsv.saturation, hsv.value);
+  const panelHex = mixHexColors(hex, '#ffffff', 0.58);
   if (editorShell) {
     editorShell.style.setProperty('--editor-shell-bg', hex);
+    editorShell.style.setProperty('--editor-panel-bg', panelHex);
   }
   if (editorSwatch) {
     editorSwatch.style.backgroundColor = hex;
@@ -184,6 +215,7 @@ function applyEditorBackground(hsv) {
   if (hueValue) hueValue.textContent = String(hsv.hue);
   if (saturationValue) saturationValue.textContent = String(hsv.saturation);
   if (valueValue) valueValue.textContent = String(hsv.value);
+  if (editorBackgroundInput) editorBackgroundInput.value = hex;
 }
 
 function currentEditorBackground() {
@@ -192,6 +224,35 @@ function currentEditorBackground() {
     saturation: Number(saturationSlider ? saturationSlider.value : defaultEditorBackground.saturation),
     value: Number(valueSlider ? valueSlider.value : defaultEditorBackground.value),
   };
+}
+
+async function persistEditorBackgroundColor(hex) {
+  const response = await fetch('/editor_preferences.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': window.OTODO_CSRF || '',
+    },
+    body: JSON.stringify({ editor_background_color: hex }),
+    credentials: 'same-origin',
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || !payload || payload.ok !== true) {
+    throw new Error('Failed to save editor background color');
+  }
+}
+
+function scheduleEditorBackgroundSave(hex) {
+  if (!window.OTODO_SERVER_AUTH) return;
+  if (editorBackgroundSaveTimeout) {
+    clearTimeout(editorBackgroundSaveTimeout);
+  }
+  editorBackgroundSaveTimeout = setTimeout(() => {
+    persistEditorBackgroundColor(hex).catch((error) => {
+      console.error(error);
+      showToast('Editor background save failed');
+    });
+  }, 250);
 }
 
 function setActiveEditorPanel(panelName) {
@@ -462,10 +523,10 @@ export async function initTaskView(options = {}) {
     slider.addEventListener('input', () => {
       const hsv = currentEditorBackground();
       applyEditorBackground(hsv);
-      saveEditorBackground(hsv);
+      scheduleEditorBackgroundSave(hsvToHex(hsv.hue, hsv.saturation, hsv.value));
     });
   });
-  applyEditorBackground(loadEditorBackground());
+  applyEditorBackground(hexToHsv(editorBackgroundFromServer));
   setActiveEditorPanel(activeEditorPanel);
 
   registerAutosaveInput(titleInput, ['input']);
