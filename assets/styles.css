@@ -35,6 +35,16 @@ body.route-task #menu {
   display: none;
 }
 
+body.route-task #task-view > .container {
+  max-width: var(--content-max-width);
+  margin: 0 auto 64px;
+  padding: 0 var(--content-padding);
+}
+
+#edit-form {
+  padding: 0;
+}
+
 .app {
   max-width: var(--content-max-width);
   margin: 32px auto 80px;

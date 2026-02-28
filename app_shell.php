@@ -99,7 +99,7 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
     <div id="offline-banner" class="offline-banner hidden" role="status">Offline mode</div>
 
     <div class="container">
-      <form id="edit-form" class="bg-white border rounded-3 p-4 shadow-sm" autocomplete="off">
+      <form id="edit-form" autocomplete="off">
         <div class="mb-3">
           <label class="form-label" for="edit-title">Title</label>
           <input id="edit-title" name="title" type="text" class="form-control" required autocapitalize="none" />
