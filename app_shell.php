@@ -144,6 +144,13 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
                 data-editor-target="archive"
                 aria-pressed="false"
               >Archive</button>
+              <button
+                type="button"
+                class="editor-toggle__button"
+                id="settings-toggle"
+                data-editor-target="settings"
+                aria-pressed="false"
+              >Settings</button>
             </div>
             <div class="editor-panel-stack">
               <div class="editor-panel" id="description-panel">
@@ -157,6 +164,29 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
                   <textarea id="edit-archive" name="description_archive" class="prism-editor__textarea" spellcheck="false"></textarea>
                   <pre class="prism-editor__preview"><code class="language-markup"></code></pre>
                 </div>
+              </div>
+              <div class="editor-panel hidden settings-panel" id="settings-panel">
+                <div class="settings-grid">
+                  <div class="settings-controls">
+                    <label class="slider-row" for="editor-hue">
+                      <span>Hue</span>
+                      <input id="editor-hue" type="range" min="0" max="360" value="210" />
+                      <span id="editor-hue-value">210</span>
+                    </label>
+                    <label class="slider-row" for="editor-saturation">
+                      <span>Sat</span>
+                      <input id="editor-saturation" type="range" min="0" max="100" value="33" />
+                      <span id="editor-saturation-value">33</span>
+                    </label>
+                    <label class="slider-row" for="editor-value">
+                      <span>Val</span>
+                      <input id="editor-value" type="range" min="0" max="100" value="98" />
+                      <span id="editor-value-value">98</span>
+                    </label>
+                  </div>
+                  <div class="settings-swatch" id="editor-swatch" aria-hidden="true"></div>
+                </div>
+                <p class="settings-note mb-0">This changes the editor background only on this device.</p>
               </div>
             </div>
           </div>

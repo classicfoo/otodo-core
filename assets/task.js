@@ -13,17 +13,28 @@ const descriptionInput = document.getElementById('edit-description');
 const archiveInput = document.getElementById('edit-archive');
 const descriptionEditorRoot = document.getElementById('edit-description-editor');
 const archiveEditorRoot = document.getElementById('edit-archive-editor');
+const editorShell = document.querySelector('.editor-shell');
 const descriptionPanel = document.getElementById('description-panel');
 const archivePanel = document.getElementById('archive-panel');
+const settingsPanel = document.getElementById('settings-panel');
 const editorToggleButtons = Array.from(document.querySelectorAll('[data-editor-target]'));
+const hueSlider = document.getElementById('editor-hue');
+const saturationSlider = document.getElementById('editor-saturation');
+const valueSlider = document.getElementById('editor-value');
+const hueValue = document.getElementById('editor-hue-value');
+const saturationValue = document.getElementById('editor-saturation-value');
+const valueValue = document.getElementById('editor-value-value');
+const editorSwatch = document.getElementById('editor-swatch');
 const deleteButton = document.getElementById('delete-task');
 const missingTask = document.getElementById('missing-task');
 const offlineIndicator = document.getElementById('offline-indicator');
 const toast = document.getElementById('toast');
 
 const starStorageKey = 'otodo_starred_tasks';
+const editorColorStorageKey = 'otodo_editor_background_hsv';
 const taskUpdatedEvent = 'otodo-task-updated';
 const taskDeletedEvent = 'otodo-task-deleted';
+const defaultEditorBackground = { hue: 210, saturation: 33, value: 98 };
 
 function loadStarState() {
   try {
@@ -96,13 +107,103 @@ function showTaskForm() {
   missingTask.classList.add('hidden');
 }
 
+function hsvToHex(hue, saturation, value) {
+  const s = saturation / 100;
+  const v = value / 100;
+  const chroma = v * s;
+  const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const match = v - chroma;
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+
+  if (hue >= 0 && hue < 60) {
+    red = chroma;
+    green = x;
+  } else if (hue < 120) {
+    red = x;
+    green = chroma;
+  } else if (hue < 180) {
+    green = chroma;
+    blue = x;
+  } else if (hue < 240) {
+    green = x;
+    blue = chroma;
+  } else if (hue < 300) {
+    red = x;
+    blue = chroma;
+  } else {
+    red = chroma;
+    blue = x;
+  }
+
+  const toHex = (channel) => Math.round((channel + match) * 255).toString(16).padStart(2, '0');
+  return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
+}
+
+function loadEditorBackground() {
+  try {
+    const raw = localStorage.getItem(editorColorStorageKey);
+    if (!raw) return { ...defaultEditorBackground };
+    const parsed = JSON.parse(raw);
+    const hue = Number(parsed.hue);
+    const saturation = Number(parsed.saturation);
+    const value = Number(parsed.value);
+    if (
+      Number.isFinite(hue) && hue >= 0 && hue <= 360 &&
+      Number.isFinite(saturation) && saturation >= 0 && saturation <= 100 &&
+      Number.isFinite(value) && value >= 0 && value <= 100
+    ) {
+      return { hue, saturation, value };
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  return { ...defaultEditorBackground };
+}
+
+function saveEditorBackground(hsv) {
+  try {
+    localStorage.setItem(editorColorStorageKey, JSON.stringify(hsv));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function applyEditorBackground(hsv) {
+  const hex = hsvToHex(hsv.hue, hsv.saturation, hsv.value);
+  if (editorShell) {
+    editorShell.style.setProperty('--editor-shell-bg', hex);
+  }
+  if (editorSwatch) {
+    editorSwatch.style.backgroundColor = hex;
+  }
+  if (hueSlider) hueSlider.value = String(hsv.hue);
+  if (saturationSlider) saturationSlider.value = String(hsv.saturation);
+  if (valueSlider) valueSlider.value = String(hsv.value);
+  if (hueValue) hueValue.textContent = String(hsv.hue);
+  if (saturationValue) saturationValue.textContent = String(hsv.saturation);
+  if (valueValue) valueValue.textContent = String(hsv.value);
+}
+
+function currentEditorBackground() {
+  return {
+    hue: Number(hueSlider ? hueSlider.value : defaultEditorBackground.hue),
+    saturation: Number(saturationSlider ? saturationSlider.value : defaultEditorBackground.saturation),
+    value: Number(valueSlider ? valueSlider.value : defaultEditorBackground.value),
+  };
+}
+
 function setActiveEditorPanel(panelName) {
-  activeEditorPanel = panelName === 'archive' ? 'archive' : 'description';
+  activeEditorPanel = ['archive', 'settings'].includes(panelName) ? panelName : 'description';
   if (descriptionPanel) {
     descriptionPanel.classList.toggle('hidden', activeEditorPanel !== 'description');
   }
   if (archivePanel) {
     archivePanel.classList.toggle('hidden', activeEditorPanel !== 'archive');
+  }
+  if (settingsPanel) {
+    settingsPanel.classList.toggle('hidden', activeEditorPanel !== 'settings');
   }
   editorToggleButtons.forEach((button) => {
     const isActive = button.dataset.editorTarget === activeEditorPanel;
@@ -356,6 +457,15 @@ export async function initTaskView(options = {}) {
       capitalizeSentences,
     });
   }
+  [hueSlider, saturationSlider, valueSlider].forEach((slider) => {
+    if (!slider) return;
+    slider.addEventListener('input', () => {
+      const hsv = currentEditorBackground();
+      applyEditorBackground(hsv);
+      saveEditorBackground(hsv);
+    });
+  });
+  applyEditorBackground(loadEditorBackground());
   setActiveEditorPanel(activeEditorPanel);
 
   registerAutosaveInput(titleInput, ['input']);
