@@ -936,20 +936,7 @@ body.route-task #task-view > .container {
 .page-index #list-navbar .navbar-brand {
   margin-right: 0.25rem;
   padding-right: 0;
-}
-
-.page-index #list-navbar .brand-short {
-  display: none;
-}
-
-@media (max-width: 920px) {
-  .page-index #list-navbar .brand-full {
-    display: none;
-  }
-
-  .page-index #list-navbar .brand-short {
-    display: inline;
-  }
+  white-space: nowrap;
 }
 
 .page-index .task-row {
@@ -1251,6 +1238,16 @@ body.route-task #task-view > .container {
 }
 
 @media (max-width: 768px) {
+  .page-index #list-navbar .navbar-brand {
+    font-size: 1.3rem;
+    margin-right: 0.15rem;
+    letter-spacing: -0.01em;
+  }
+
+  .page-index .header-actions {
+    gap: 0.35rem;
+  }
+
   .page-index .task-row {
     grid-template-columns: minmax(0, 1fr) auto;
     column-gap: 0.5rem;
@@ -1282,7 +1279,7 @@ body.route-task #task-view > .container {
   }
 
   .page-index .task-search.expanded {
-    width: min(180px, 56vw);
+    width: min(170px, 52vw);
   }
 
 }
