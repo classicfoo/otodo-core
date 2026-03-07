@@ -24,7 +24,10 @@ $capitalizeSentences = (bool)($capitalizeSentences ?? true);
 <body class="bg-light page-index <?php echo $routeClass; ?>">
   <nav class="navbar navbar-light bg-white mb-4" id="list-navbar">
     <div class="container d-flex justify-content-between align-items-center">
-      <a href="/index.php" class="navbar-brand mb-0 h1 text-decoration-none">Otodo Core</a>
+      <a href="/index.php" class="navbar-brand mb-0 h1 text-decoration-none" aria-label="Otodo Core">
+        <span class="brand-full">Otodo Core</span>
+        <span class="brand-short">Otodo</span>
+      </a>
       <div class="d-flex align-items-center header-actions ms-auto">
         <div class="task-search" id="task-search" aria-expanded="false">
           <button class="search-toggle" type="button" id="task-search-toggle" aria-label="Search tasks">

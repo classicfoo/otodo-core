@@ -929,6 +929,29 @@ body.route-task #task-view > .container {
   gap: 0.5rem;
 }
 
+.page-index #list-navbar .container {
+  flex-wrap: nowrap;
+}
+
+.page-index #list-navbar .navbar-brand {
+  margin-right: 0.25rem;
+  padding-right: 0;
+}
+
+.page-index #list-navbar .brand-short {
+  display: none;
+}
+
+@media (max-width: 920px) {
+  .page-index #list-navbar .brand-full {
+    display: none;
+  }
+
+  .page-index #list-navbar .brand-short {
+    display: inline;
+  }
+}
+
 .page-index .task-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 260px;
@@ -1259,6 +1282,7 @@ body.route-task #task-view > .container {
   }
 
   .page-index .task-search.expanded {
-    width: min(200px, 60vw);
+    width: min(180px, 56vw);
   }
+
 }
